@@ -4,6 +4,7 @@
 
 #ifndef PI_C_STORAGEMANAGER_H
 #define PI_C_STORAGEMANAGER_H
+
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
@@ -12,8 +13,11 @@ using namespace std;
 class storageManager {
 public:
     void loadAllFiles();
+
+    vector<string> getFileNames();
     json getFileByName(string);
-    const char * storageLocation = "store/*";
+
+    const string storageLocation = "/Users/jackthomson/Documents/store/*";
 private:
     vector<string> fileNames;
     vector<json> fileData;

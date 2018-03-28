@@ -3,15 +3,14 @@
 //
 
 #include "storageManager.h"
-#include <string>
-#include <iostream>
 #include <glob.h>
 
 using namespace std;
 
 void storageManager::loadAllFiles() {
     glob_t glob_result{};
-    glob(storageLocation, GLOB_TILDE, nullptr, &glob_result);
+    glob(storageLocation.c_str(), GLOB_TILDE, nullptr, &glob_result);
+    printf("Searching for files\n\n");
 
     for(unsigned int i=0; i < glob_result.gl_pathc; ++i){
         fileNames.emplace_back(glob_result.gl_pathv[i]);
@@ -20,4 +19,8 @@ void storageManager::loadAllFiles() {
 
 json storageManager::getFileByName(string) {
     return json();
+}
+
+vector<string> storageManager::getFileNames() {
+    return fileNames;
 }
