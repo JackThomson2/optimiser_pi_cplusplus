@@ -5,12 +5,24 @@
 #include <array>
 #include "sensor.h"
 
-void sensor::storeNewReading() {
-    vector<int16_t> record = {30, 40, 50};
+using json = nlohmann::json;
 
-    recordings.push_back(record);
+void sensor::storeNewReading() {
+    xRecordings.emplace_back(30);
+    yRecordings.emplace_back(20);
+    zRecordings.emplace_back(25);
 }
 
-vector<vector<int16_t>> sensor::getdata() {
-    return recordings;
+json sensor::getData() {
+    return json {
+            {"x", xRecordings},
+            {"y", yRecordings},
+            {"z", zRecordings}
+    };
+}
+
+void sensor::resetStores() {
+    xRecordings = json::array();
+    yRecordings = json::array();
+    zRecordings = json::array();
 }

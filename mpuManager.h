@@ -12,11 +12,15 @@ class mpuManager {
 public:
     void startRecording(std::atomic<bool>&);
 private:
-    void getDevices();
     sensor Sensor[6];
-    int RECORDS_PER_SECOND = 20;
-    float SECONDS_PER_RECORD = 1 / RECORDS_PER_SECOND;
     int WAIT_TIME = 50;
+
+
+    void getDeviceReadings();
+
+    void storeJSON();
+
+    void initRecording();
 };
 
 

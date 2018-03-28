@@ -10,6 +10,8 @@ using json = nlohmann::json;
 
 using namespace std;
 
+const static string storageLocation = "/Users/jackthomson/Documents/store/";
+
 class storageManager {
 public:
     void loadAllFiles();
@@ -17,10 +19,12 @@ public:
     vector<string> getFileNames();
     json getFileByName(string);
 
-    const string storageLocation = "/Users/jackthomson/Documents/store/*";
+    const string searchLocation = storageLocation + "*";
 private:
     vector<string> fileNames;
-    vector<json> fileData;
+    json fileData;
+
+    json getJsonFromFile(string);
 };
 
 

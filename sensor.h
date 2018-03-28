@@ -7,15 +7,24 @@
 
 
 #include <vector>
+#include "storageManager.h"
+
+using json = nlohmann::json;
 using namespace std;
 
 class sensor {
 public:
+
     void storeNewReading();
-    vector<vector<int16_t> > getdata();
+
+    json getData();
+
+    void resetStores();
 
 private:
-    vector<vector<int16_t> > recordings;
+    json xRecordings = json::array();
+    json yRecordings = json::array();
+    json zRecordings = json::array();
 };
 
 

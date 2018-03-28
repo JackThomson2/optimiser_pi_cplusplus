@@ -41,8 +41,9 @@ bool server::checkRequest(const string &request) {
 
 void server::printFiles() {
     printf("Files recorded:\n");
-    for (auto const &c : storageManager.getFileNames())
-        printf("%s\n", c.c_str());
+    for (auto const &c : storageManager.getFileNames()) {
+        printf("File: %s\n%s\n", c.c_str(), storageManager.getFileByName(c).dump().c_str());
+    }
 }
 
 void server::startRecording() {
