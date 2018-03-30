@@ -7,4 +7,4 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-add_executable(pi_c__ main.cpp server.cpp server.h sensor.cpp sensor.h mpuManager.cpp mpuManager.h storageManager.cpp storageManager.h)
+add_executable(pi_c__ main.cpp server.cpp server.h sensor.cpp sensor.h mpuManager.cpp mpuManager.h storageManager.cpp storageManager.h catch.hpp)
