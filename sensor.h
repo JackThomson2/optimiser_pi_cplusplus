@@ -28,17 +28,20 @@ private:
     json yRecordings = json::array();
     json zRecordings = json::array();
 
-    int16_t xGyro = 0;
-    int16_t yGyro = 0;
-    int16_t zGyro = 0;
+    float xSpeed = 0;
+    float ySpeed = 0;
+    float zSpeed = 0;
 
-    int16_t xAccel = 0;
-    int16_t yAccel = 0;
-    int16_t zAccel = 0;
+    float xDistance = 0;
+    float yDistance = 0;
+    float zDistance = 0;
+
 
     vector<int16_t> getSensorValues();
 
-    vector<float> getGravityEffect(vector<int16_t>);
+    vector<double> getGravityEffect(vector<int16_t>);
+
+    void getDistance(vector<double>);
 };
 
 

@@ -4,6 +4,7 @@
 
 #include <array>
 #include "sensor.h"
+#include "mpuManager.h"
 #include <random>
 
 using json = nlohmann::json;
@@ -11,12 +12,13 @@ using json = nlohmann::json;
 void sensor::storeNewReading() {
 
     auto sensorVals = getSensorValues();
-
     auto normalised = getGravityEffect(sensorVals);
 
-    xRecordings.emplace_back(normalised[0]);
-    yRecordings.emplace_back(normalised[1]);
-    zRecordings.emplace_back(normalised[2]);
+    getDistance(normalised);
+
+    xRecordings.emplace_back(xDistance);
+    yRecordings.emplace_back(yDistance);
+    zRecordings.emplace_back(zDistance);
 }
 
 json sensor::getData() {
@@ -50,40 +52,37 @@ vector<int16_t> sensor::getSensorValues() {
     return vector<int16_t> {xAccel, yAccel, zAccel, xGyro, yGyro, zGyro};
 }
 
-vector<float> sensor::getGravityEffect(vector<int16_t> input) {
+vector<double> sensor::getGravityEffect(vector<int16_t> input) {
 
-    float x = input[0] / 16384;
-    float y = input[1] / 16384;
-    float z = input[2] / 16384;
+    double x = double(input[0]) / double(16384);
+    double y = double(input[1]) / double(16384);
+    double z = double(input[2]) / double(16384);
 
-    float accel[3] = {x, y, z};
-    float gravity[3] = {0, 0, 1.0}; // Always vertically downwards at g = 1.0
-    float rG[3], rA[3];
-    float mA[3];
+    double accel[3] = {x, y, z};
+    double gravity[3] = {0, 0, 1.0}; // Always vertically downwards at g = 1.0
+    double rG[3], rA[3];
+    double mA[3];
 
     // Angle of rotation
-    auto alpha = float(input[3] * radConvertor);
-    auto beta = float(input[4] * radConvertor);
-    auto theta = float(input[5] * radConvertor);
+    auto alpha = input[3] * radConvertor;
+    auto beta = input[4] * radConvertor;
+    auto theta = input[5] * radConvertor;
 
-    float R[3][3] =
+    double R[3][3] =
             {
                     {cos(alpha) * cos(beta), cos(alpha) * sin(beta) * sin(theta) - sin(alpha) * cos(theta),
-                                                                                                            cos(alpha) *
-                                                                                                            sin(beta) *
-                                                                                                            cos(theta) +
-                                                                                                            sin(alpha) *
-                                                                                                            sin(theta)},
-                    {sin(alpha) * cos(beta), sin(alpha) * sin(beta) * sin(theta) + cos(alpha) * cos(theta), sin(alpha) *
-                                                                                                            sin(beta) *
-                                                                                                            cos(theta) -
-                                                                                                            cos(alpha) *
-                                                                                                            sin(theta)},
-                    {-1 * sin(beta),         cos(beta) * sin(theta),                                        cos(beta) *
-                                                                                                            cos(theta)}
+                                                                     cos(alpha) * sin(beta) * cos(theta) +
+                                                                     sin(alpha) * sin(theta)},
+
+                    {sin(alpha) * cos(beta), sin(alpha) * sin(beta) * sin(theta) + cos(alpha) * cos(theta),
+                                                                     sin(alpha) * sin(beta) * cos(theta) -
+                                                                     cos(alpha) * sin(theta)},
+
+                    {-1 * sin(beta),         cos(beta) * sin(theta), cos(beta) * cos(theta)}
             };
 
-    float det = R[0][0] * (R[1][1] * R[2][2] - R[1][2] * R[2][1])\
+
+    double det = R[0][0] * (R[1][1] * R[2][2] - R[1][2] * R[2][1])\
  - R[0][1] * (R[1][0] * R[2][2] - R[1][2] * R[2][0])\
  + R[0][2] * (R[1][0] * R[2][1] - R[1][1] * R[2][0]);
 
@@ -103,5 +102,19 @@ vector<float> sensor::getGravityEffect(vector<int16_t> input) {
     rA[1] = mA[0] * R[0][1] + mA[1] * R[1][1] + mA[2] * R[2][1];
     rA[2] = mA[0] * R[0][2] + mA[1] * R[1][2] + mA[2] * R[2][2];
 
-    return vector<float> {rA[0], rA[1], rA[2]};
+    return vector<double> {rA[0], rA[1], rA[2]};
+}
+
+void sensor::getDistance(vector<double> accelerations) {
+    double xSpeedChange = accelerations[0] * RECORDS_PER_SECOND;
+    double ySpeedChange = accelerations[1] * RECORDS_PER_SECOND;
+    double zSpeedChange = accelerations[2] * RECORDS_PER_SECOND;
+
+    xSpeed += xSpeedChange;
+    ySpeed += ySpeedChange;
+    zSpeed += zSpeedChange;
+
+    xDistance += xSpeedChange * RECORDS_PER_SECOND;
+    yDistance += ySpeedChange * RECORDS_PER_SECOND;
+    zDistance += zSpeedChange * RECORDS_PER_SECOND;
 }
