@@ -13,6 +13,8 @@ using json = nlohmann::json;
 using namespace std;
 
 const auto radConvertor = M_PI / 180.0;
+const double gravityAccel = 9.84016;
+const double sensorOffset = 16384;
 
 class sensor {
 public:

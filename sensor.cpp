@@ -54,9 +54,9 @@ vector<int16_t> sensor::getSensorValues() {
 
 vector<double> sensor::getGravityEffect(vector<int16_t> input) {
 
-    double x = double(input[0]) / double(16384);
-    double y = double(input[1]) / double(16384);
-    double z = double(input[2]) / double(16384);
+    double x = double(input[0]) / sensorOffset;
+    double y = double(input[1]) / sensorOffset;
+    double z = double(input[2]) / sensorOffset;
 
     double accel[3] = {x, y, z};
     double gravity[3] = {0, 0, 1.0}; // Always vertically downwards at g = 1.0
@@ -98,9 +98,9 @@ vector<double> sensor::getGravityEffect(vector<int16_t> input) {
     mA[1] = rA[1] - rG[1];
     mA[2] = rA[2] - rG[2];
 
-    rA[0] = mA[0] * R[0][0] + mA[1] * R[1][0] + mA[2] * R[2][0];
-    rA[1] = mA[0] * R[0][1] + mA[1] * R[1][1] + mA[2] * R[2][1];
-    rA[2] = mA[0] * R[0][2] + mA[1] * R[1][2] + mA[2] * R[2][2];
+    rA[0] = (mA[0] * R[0][0] + mA[1] * R[1][0] + mA[2] * R[2][0]) * gravityAccel;
+    rA[1] = (mA[0] * R[0][1] + mA[1] * R[1][1] + mA[2] * R[2][1]) * gravityAccel;
+    rA[2] = (mA[0] * R[0][2] + mA[1] * R[1][2] + mA[2] * R[2][2]) * gravityAccel;
 
     return vector<double> {rA[0], rA[1], rA[2]};
 }
