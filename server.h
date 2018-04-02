@@ -22,13 +22,15 @@ private:
     atomic<bool> running{false};
     mpuManager sensorManager;
 
-    bool checkRequest(const string &);
+    string checkRequest(const string &);
 
-    void printFiles();
+    string getFiles();
 
     void startRecording();
 
     void stopRecording();
+
+    string getFile(string);
 };
 
 

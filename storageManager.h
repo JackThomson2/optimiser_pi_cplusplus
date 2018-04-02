@@ -11,11 +11,13 @@ using json = nlohmann::json;
 using namespace std;
 
 const static string storageLocation = "/home/pi/recordings/";
+const static int initalLength = storageLocation.length();
 
 class storageManager {
 public:
     void loadAllFiles();
 
+    string getFileNamesJson();
     vector<string> getFileNames();
     json getFileByName(string);
 
@@ -25,6 +27,10 @@ private:
     json fileData;
 
     json getJsonFromFile(string);
+
+    string getSentName(string);
+
+    string getNameFromRequest(string);
 };
 
 

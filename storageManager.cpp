@@ -20,15 +20,28 @@ void storageManager::loadAllFiles() {
 }
 
 json storageManager::getFileByName(string name) {
+    name = getNameFromRequest(name);
+
     if (fileData[name] == nullptr)
         fileData[name] = getJsonFromFile(name);
 
     return fileData[name];
 }
 
+string storageManager::getFileNamesJson() {
+    loadAllFiles();
+    json info = json::array();
+
+    for (auto file : fileNames) {
+        info.emplace_back(getSentName(file) + "000");
+    }
+
+    return info.dump();
+}
+
 vector<string> storageManager::getFileNames() {
     loadAllFiles();
-
+    
     return fileNames;
 }
 
@@ -46,4 +59,14 @@ json storageManager::getJsonFromFile(string location) {
     file.close();
 
     return json::parse(result);
+}
+
+string storageManager::getSentName(string requestWord) {
+    int totalLength = requestWord.length();
+    int endLoc = totalLength - initalLength - 7;
+    return requestWord.substr(initalLength, endLoc);
+}
+
+string storageManager::getNameFromRequest(string requestWord) {
+    return storageLocation + requestWord + ".record";
 }
