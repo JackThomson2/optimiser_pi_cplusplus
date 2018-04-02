@@ -6,14 +6,15 @@
 #include <thread>
 #include <iostream>
 #include <fstream>
+#include <atomic>
 
 using namespace std;
 
 // With a loop will tell all the sensors to record their information
-void mpuManager::startRecording(std::atomic<bool>& stop) {
+void mpuManager::startRecording(atomic<bool>& stop) {
     initRecording();
 
-    while(stop) {
+    while(stop.load()) {
         auto start_s = chrono::steady_clock::now();
         getDeviceReadings();
         auto diff = chrono::steady_clock::now() - start_s;

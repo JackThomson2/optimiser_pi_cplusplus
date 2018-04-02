@@ -5,12 +5,12 @@
 #ifndef PI_C_STORAGEMANAGER_H
 #define PI_C_STORAGEMANAGER_H
 
-#include <nlohmann/json.hpp>
+#include "json.hpp"
 using json = nlohmann::json;
 
 using namespace std;
 
-const static string storageLocation = "/Users/jackthomson/Documents/store/";
+const static string storageLocation = "/home/pi/recordings/";
 
 class storageManager {
 public:

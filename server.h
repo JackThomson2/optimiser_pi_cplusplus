@@ -6,6 +6,7 @@
 #define PI_C_SERVER_H
 
 #include <thread>
+#include <atomic>
 #include "storageManager.h"
 #include "mpuManager.h"
 
@@ -16,7 +17,7 @@ public:
     server();
     void startSever();
 private:
-    storageManager storageManager;
+    storageManager storage;
     thread recordingThread;
     atomic<bool> running{false};
     mpuManager sensorManager;

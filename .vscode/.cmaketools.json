@@ -30,7 +30,8 @@
                       "sensor.h",
                       "mpuManager.h",
                       "storageManager.h",
-                      "catch.hpp"
+                      "catch.hpp",
+                      "json.hpp"
                     ]
                   },
                   {
@@ -58,7 +59,7 @@
         ]
       }
     ],
-    "cookie": "0.316862533352112",
+    "cookie": "0.9630418537071024",
     "inReplyTo": "codemodel",
     "type": "reply"
   }
