@@ -1,0 +1,65 @@
+{
+  "variant": {
+    "label": "Debug",
+    "keywordSettings": {
+      "buildType": "debug"
+    },
+    "description": "Emit debug information without performing optimizations"
+  },
+  "activeEnvironments": [],
+  "codeModel": {
+    "configurations": [
+      {
+        "name": "Debug",
+        "projects": [
+          {
+            "buildDirectory": "/home/pi/Documents/optimiser_pi_cplusplus/build",
+            "name": "pi_c__",
+            "sourceDirectory": "/home/pi/Documents/optimiser_pi_cplusplus",
+            "targets": [
+              {
+                "artifacts": [
+                  "/home/pi/Documents/optimiser_pi_cplusplus/build/pi_c__"
+                ],
+                "buildDirectory": "/home/pi/Documents/optimiser_pi_cplusplus/build",
+                "fileGroups": [
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "server.h",
+                      "sensor.h",
+                      "mpuManager.h",
+                      "storageManager.h",
+                      "catch.hpp"
+                    ]
+                  },
+                  {
+                    "compileFlags": "-Wall -Wextra -g   -std=gnu++1z",
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "main.cpp",
+                      "server.cpp",
+                      "sensor.cpp",
+                      "mpuManager.cpp",
+                      "storageManager.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "pi_c__",
+                "linkLanguageFlags": "-Wall -Wextra -g",
+                "linkerLanguage": "CXX",
+                "name": "pi_c__",
+                "sourceDirectory": "/home/pi/Documents/optimiser_pi_cplusplus",
+                "type": "EXECUTABLE"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "cookie": "0.316862533352112",
+    "inReplyTo": "codemodel",
+    "type": "reply"
+  }
+}
