@@ -25,47 +25,55 @@ void server::startSever() {
     char address[18] = "B8:27:EB:D9:30:C6";
     socklen_t opt = sizeof(rem_addr);
 
-    // allocate socket
-    s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+    while (true) {
+        // allocate socket
+        s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
 
-    // bind socket to port 1 of the first available 
-    // local bluetooth adapter
-    loc_addr.rc_family = AF_BLUETOOTH;
-    str2ba( address, &loc_addr.rc_bdaddr);
-    loc_addr.rc_channel = (uint8_t) 1;
-    bind(s, (struct sockaddr *)&loc_addr, sizeof(loc_addr));
+        // bind socket to port 1 of the first available 
+        // local bluetooth adapter
+        loc_addr.rc_family = AF_BLUETOOTH;
+        str2ba( address, &loc_addr.rc_bdaddr);
+        loc_addr.rc_channel = (uint8_t) 1;
+        bind(s, (struct sockaddr *)&loc_addr, sizeof(loc_addr));
 
-    // put socket into listening mode
-    listen(s, 1);
+        // put socket into listening mode
+        listen(s, 1);
 
-    // accept one connection
-    client = accept(s, (struct sockaddr *)&rem_addr, &opt);
-    ba2str( &rem_addr.rc_bdaddr, buf );
-    fprintf(stderr, "accepted connection from %s\n", buf);
+        // accept one connection
+        client = accept(s, (struct sockaddr *)&rem_addr, &opt);
+        ba2str( &rem_addr.rc_bdaddr, buf );
+        fprintf(stderr, "Accepted connection from %s\n\n", buf);
 
-    while (client) {
-        memset(buf, 0, sizeof(buf));
+        while (client) {
+            memset(buf, 0, sizeof(buf));
 
-        // read data from the client
-        bytes_read = read(client, buf, sizeof(buf));
-        string message;
-        if( bytes_read > 0 ) {
-            message = checkRequest(buf);
-            if (message == "stop") {
+            // read data from the client
+            bytes_read = read(client, buf, sizeof(buf));
+            string message;
+            if( bytes_read > 0 ) {
+                message = checkRequest(buf);
+                if (message == "stop") {
+                    close(client);
+                    close(s);
+                    return;
+                }
+
+                printf("Recieved %s\n", buf);
+                auto status = write(client, message.c_str(), message.length());
+                if (status < 2000 && status > 0)
+                    printf("Sent %s, status %i\n\n", message.c_str(), status);
+                else
+                    printf("Sent big message\n\n");
+
+            } else {
                 close(client);
                 close(s);
-                return;
+                client = false;  
+                continue;
             }
-            auto status = write(client, message.c_str(), message.length());
-            if (status < 2000 && status > 0)
-                printf("Sent %s, status %i\n\n", message.c_str(), status);
-            else
-                printf("Sent big message\n\n");
-        } else {
-            close(client);
-            close(s);  
-            return;
         }
+
+        printf("Client disconnected waiting for new item\n\n\n");
     }
 
     // close connection
