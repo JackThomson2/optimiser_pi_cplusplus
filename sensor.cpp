@@ -16,9 +16,9 @@ void sensor::storeNewReading() {
 
     getDistance(normalised);
 
-    xRecordings.emplace_back(xDistance);
-    yRecordings.emplace_back(yDistance);
-    zRecordings.emplace_back(zDistance);
+    xRecordings.emplace_back(sensorVals[0]);
+    yRecordings.emplace_back(sensorVals[1]);
+    zRecordings.emplace_back(sensorVals[2]);
 }
 
 json sensor::getData() {
@@ -36,18 +36,10 @@ void sensor::resetStores() {
 }
 
 vector<int16_t> sensor::getSensorValues() {
-    random_device rd;
-    mt19937 rng(rd());
-    uniform_int_distribution<int16_t> accelRng(-32767, 32767);
-    uniform_int_distribution<int16_t> gyroRng(0, 360);
+    int16_t xAccel, yAccel, zAccel;
+    int16_t xGyro, yGyro, zGyro;
 
-    auto xAccel = accelRng(rng);
-    auto yAccel = accelRng(rng);
-    auto zAccel = accelRng(rng);
-
-    auto xGyro = gyroRng(rng);
-    auto yGyro = gyroRng(rng);
-    auto zGyro = gyroRng(rng);
+    accelgyro.getMotion6(&xAccel, &yAccel, &zAccel, &xGyro, &yGyro, &zGyro);
 
     return vector<int16_t> {xAccel, yAccel, zAccel, xGyro, yGyro, zGyro};
 }

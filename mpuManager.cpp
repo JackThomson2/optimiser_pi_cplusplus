@@ -29,6 +29,15 @@ void mpuManager::startRecording(atomic<bool>& stop) {
     printf("I got %lu recordings.\n", Sensor[0].getData()["x"].size());
 }
 
+void mpuManager::runMultiTest() {
+    printf("Running tests\n");
+    for (int i = 0; i != 5; i++) {
+        multi.setPath(i);
+        printf("Reading %i ", i);
+        printf("Multi reads %i\n\n", multi.getPath());
+    }
+}
+
 void mpuManager::getDeviceReadings() {
     for (int i = 0; i != 5; i++)
         Sensor[i].storeNewReading();
@@ -53,6 +62,8 @@ void mpuManager::storeJSON() {
 }
 
 void mpuManager::initRecording() {
+    I2Cdev::initialize();
+    printf("Initialized i2c\n");
     for (int i = 0; i != 5; i++)
         Sensor[i].resetStores();
 }

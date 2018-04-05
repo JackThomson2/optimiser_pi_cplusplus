@@ -3,6 +3,7 @@
 //
 
 #include "server.h"
+#include "I2Cdev.h"
 #include <iostream>
 #include <stdio.h>
 #include <unistd.h>
@@ -13,18 +14,23 @@
 using namespace std;
 
 server::server() {
-    storage.loadAllFiles();
+    //INIT CODE
 }
 
 void server::startSever() {
+    I2Cdev::initialize();
+    printf("Initialized i2c\n");
+
     cout << "Starting server" << endl;
     struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
-
     char buf[1024] = { 0 };
     int s, client, bytes_read;
     char address[18] = "B8:27:EB:D9:30:C6";
     socklen_t opt = sizeof(rem_addr);
 
+    sensorManager.runMultiTest();
+
+    printf("Waiting for connection...\n\n");
     while (true) {
         // allocate socket
         s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
@@ -50,6 +56,7 @@ void server::startSever() {
             // read data from the client
             bytes_read = read(client, buf, sizeof(buf));
             string message;
+            printf("Recieved %s\n", buf);
             if( bytes_read > 0 ) {
                 message = checkRequest(buf);
                 if (message == "stop") {
@@ -58,12 +65,12 @@ void server::startSever() {
                     return;
                 }
 
-                printf("Recieved %s\n", buf);
+                printf("Sending response...\n");
                 auto status = write(client, message.c_str(), message.length());
-                if (status < 2000 && status > 0)
+                if (status < 500 && status > 0)
                     printf("Sent %s, status %i\n\n", message.c_str(), status);
                 else
-                    printf("Sent big message\n\n");
+                    printf("Sent big message, size %i\n\n", status);
 
             } else {
                 close(client);

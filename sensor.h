@@ -5,16 +5,17 @@
 #ifndef PI_C_SENSOR_H
 #define PI_C_SENSOR_H
 
-
 #include <vector>
 #include "storageManager.h"
+#include "I2Cdev.h"
+#include "MPU6050.h"
 
 using json = nlohmann::json;
 using namespace std;
 
 const auto radConvertor = M_PI / 180.0;
 const double gravityAccel = 9.84016;
-const double sensorOffset = 16384;
+const double sensorOffset = 16384.0;
 
 class sensor {
 public:
@@ -38,6 +39,7 @@ private:
     float yDistance = 0;
     float zDistance = 0;
 
+    MPU6050 accelgyro;
 
     vector<int16_t> getSensorValues();
 
