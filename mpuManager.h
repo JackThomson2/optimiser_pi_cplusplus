@@ -17,6 +17,8 @@ public:
     void startRecording(std::atomic<bool>&);
 
     void runMultiTest();
+
+    void runInitalisation();
 private:
     sensor Sensor[6];
 

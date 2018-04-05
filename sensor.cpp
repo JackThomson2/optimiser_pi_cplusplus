@@ -9,6 +9,10 @@
 
 using json = nlohmann::json;
 
+void sensor::init() {
+    accelgyro.initialize();
+}
+
 void sensor::storeNewReading() {
 
     auto sensorVals = getSensorValues();

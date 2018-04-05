@@ -19,6 +19,7 @@ const double sensorOffset = 16384.0;
 
 class sensor {
 public:
+    void init();
 
     void storeNewReading();
 

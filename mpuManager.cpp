@@ -38,6 +38,14 @@ void mpuManager::runMultiTest() {
     }
 }
 
+void mpuManager::runInitalisation() {
+    printf("Initialising sensors\n");
+    for (int i = 0; i != 5; i++) {
+        multi.setPath(i);
+        Sensor[0].init();
+    }
+}
+
 void mpuManager::getDeviceReadings() {
     for (int i = 0; i != 5; i++)
         Sensor[i].storeNewReading();

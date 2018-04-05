@@ -18,17 +18,17 @@ server::server() {
 }
 
 void server::startSever() {
+    printf("Setting up i2c\n");
     I2Cdev::initialize();
     printf("Initialized i2c\n");
+    sensorManager.runInitalisation();
 
-    cout << "Starting server" << endl;
+    printf("Starting server\n");
     struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
     char buf[1024] = { 0 };
     int s, client, bytes_read;
     char address[18] = "B8:27:EB:D9:30:C6";
     socklen_t opt = sizeof(rem_addr);
-
-    sensorManager.runMultiTest();
 
     printf("Waiting for connection...\n\n");
     while (true) {
