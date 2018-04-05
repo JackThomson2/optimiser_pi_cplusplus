@@ -9,7 +9,7 @@
 #include "I2Cdev.h"
 #include "multiplexer.h"
 
-const int WAIT_TIME = 50;
+const int WAIT_TIME = 1;
 const double RECORDS_PER_SECOND = 1000 / double(WAIT_TIME);
 
 class mpuManager {

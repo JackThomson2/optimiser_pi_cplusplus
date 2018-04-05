@@ -20,9 +20,9 @@ void sensor::storeNewReading() {
 
     getDistance(normalised);
 
-    xRecordings.emplace_back(sensorVals[0]);
-    yRecordings.emplace_back(sensorVals[1]);
-    zRecordings.emplace_back(sensorVals[2]);
+    xRecordings.emplace_back(normalised[0]);
+    yRecordings.emplace_back(normalised[1]);
+    zRecordings.emplace_back(normalised[2]);
 }
 
 json sensor::getData() {
@@ -98,7 +98,7 @@ vector<double> sensor::getGravityEffect(vector<int16_t> input) {
     rA[1] = (mA[0] * R[0][1] + mA[1] * R[1][1] + mA[2] * R[2][1]) * gravityAccel;
     rA[2] = (mA[0] * R[0][2] + mA[1] * R[1][2] + mA[2] * R[2][2]) * gravityAccel;
 
-    return vector<double> {rA[0], rA[1], rA[2]};
+    return vector<double> {x, y, z};
 }
 
 void sensor::getDistance(vector<double> accelerations) {

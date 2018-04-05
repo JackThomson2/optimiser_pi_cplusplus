@@ -47,8 +47,10 @@ void mpuManager::runInitalisation() {
 }
 
 void mpuManager::getDeviceReadings() {
-    for (int i = 0; i != 5; i++)
+    for (int i = 0; i != 5; i++) {
+        multi.setPath(i);
         Sensor[i].storeNewReading();
+    }
 }
 
 void mpuManager::storeJSON() {
