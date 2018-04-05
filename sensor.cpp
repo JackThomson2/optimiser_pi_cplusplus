@@ -20,23 +20,34 @@ void sensor::storeNewReading() {
 
     getDistance(normalised);
 
-    xRecordings.emplace_back(normalised[0]);
-    yRecordings.emplace_back(normalised[1]);
-    zRecordings.emplace_back(normalised[2]);
+    axRecordings.emplace_back(normalised[0]);
+    ayRecordings.emplace_back(normalised[1]);
+    azRecordings.emplace_back(normalised[2]);
+
+    gxRecordings.emplace_back(normalised[3]);
+    gyRecordings.emplace_back(normalised[4]);
+    gzRecordings.emplace_back(normalised[5]);
 }
 
 json sensor::getData() {
     return json {
-            {"x", xRecordings},
-            {"y", yRecordings},
-            {"z", zRecordings}
+            {"ax", axRecordings},
+            {"ay", ayRecordings},
+            {"az", azRecordings},
+            {"gx", gxRecordings},
+            {"gy", gyRecordings},
+            {"gz", gzRecordings}
     };
 }
 
 void sensor::resetStores() {
-    xRecordings = json::array();
-    yRecordings = json::array();
-    zRecordings = json::array();
+    axRecordings = json::array();
+    ayRecordings = json::array();
+    azRecordings = json::array();
+
+    gxRecordings = json::array();
+    gyRecordings = json::array();
+    gzRecordings = json::array();
 }
 
 vector<int16_t> sensor::getSensorValues() {

@@ -28,9 +28,13 @@ public:
     void resetStores();
 
 private:
-    json xRecordings = json::array();
-    json yRecordings = json::array();
-    json zRecordings = json::array();
+    json axRecordings = json::array();
+    json ayRecordings = json::array();
+    json azRecordings = json::array();
+
+    json gxRecordings = json::array();
+    json gyRecordings = json::array();
+    json gzRecordings = json::array();
 
     float xSpeed = 0;
     float ySpeed = 0;
