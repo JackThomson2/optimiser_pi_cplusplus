@@ -13,15 +13,16 @@ using json = nlohmann::json;
 
 void sensor::init() {
     accelgyro.initialize();
+    this_thread::sleep_for(chrono::milliseconds(400));
+    printf("Connection good %s\n", accelgyro.testConnection() ? "Yes" : "No");
     auto info = accelgyro.dmpInitialize();
 
-    printf("Connectiong good %s\n", accelgyro.testConnection() ? "Yes" : "No");
 
     printf("Status %i \n\n",info);
 
-    accelgyro.setXGyroOffsetTC(220);
-    accelgyro.setYGyroOffsetTC(76);
-    accelgyro.setZGyroOffsetTC(-85);
+    accelgyro.setXGyroOffset(220);
+    accelgyro.setYGyroOffset(76);
+    accelgyro.setZGyroOffset(-85);
     accelgyro.setXAccelOffset(1788);
 
     accelgyro.setDMPEnabled(true);
@@ -35,31 +36,26 @@ void sensor::init() {
 
         if ((status & 0x10) || fifocount == 1024) {
             accelgyro.resetFIFO();
-            printf("Reset fifo status %i count %i\n\n",status, fifocount);
-
-            this_thread::sleep_for(chrono::milliseconds(600));
         } else {
             while(fifocount < packetSize) fifocount = accelgyro.getFIFOCount();
 
-            printf("\n\nFifo count %i\n", fifocount);
+            //printf("\n\nFifo count %i\n", fifocount);
 
             accelgyro.getFIFOBytes(fifobuffer, packetSize);
             fifocount -= packetSize;
 
             accelgyro.dmpGetQuaternion(&q, fifobuffer);
-            printf("Quaternion w: %f, x: %f, y: %f, z: %f\n",q.w, q.x, q.y, q.z);
+            //printf("Quaternion w: %f, x: %f, y: %f, z: %f\n",q.w, q.x, q.y, q.z);
 
             accelgyro.dmpGetAccel(&aa, fifobuffer);
             accelgyro.dmpGetGravity(&gravity, &q);
-            printf("Gravity x: %f, y: %f, z: %f\n",gravity.x, gravity.y, gravity.z);     
+            //printf("Gravity x: %f, y: %f, z: %f\n",gravity.x, gravity.y, gravity.z);     
 
             accelgyro.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-            printf("Real accel x: %i, y: %i, z: %i\n",aaReal.x, aaReal.y, aaReal.z);     
+            //printf("Real accel x: %i, y: %i, z: %i\n",aaReal.x, aaReal.y, aaReal.z);     
 
             accelgyro.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
             printf("World accel x: %i, y: %i, z: %i\n",aaWorld.x, aaWorld.y, aaWorld.z);
-
-            this_thread::sleep_for(chrono::milliseconds(600));
         }
     }
 }

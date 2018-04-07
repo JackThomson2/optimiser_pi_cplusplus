@@ -31,7 +31,7 @@ void mpuManager::startRecording(atomic<bool>& stop) {
 
 void mpuManager::runMultiTest() {
     printf("Running tests\n");
-    for (int i = 0; i != 5; i++) {
+    for (int i = 1; i != 6; i++) {
         multi.setPath(i);
         printf("Reading %i ", i);
         printf("Multi reads %i\n\n", multi.getPath());
@@ -40,9 +40,10 @@ void mpuManager::runMultiTest() {
 
 void mpuManager::runInitalisation() {
     printf("Initialising sensors\n");
-    for (int i = 0; i != 5; i++) {
+    for (int i = 1; i != 6; i++) {
         multi.setPath(i);
-        Sensor[0].init();
+        this_thread::sleep_for(chrono::milliseconds(200));
+        Sensor[i].init();
     }
 }
 

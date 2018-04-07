@@ -20,6 +20,7 @@ server::server() {
 void server::startSever() {
     printf("Setting up i2c\n");
     I2Cdev::initialize();
+    sensorManager.runMultiTest();
     printf("Initialized i2c\n");
     sensorManager.runInitalisation();
 
