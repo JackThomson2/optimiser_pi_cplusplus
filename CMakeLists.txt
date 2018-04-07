@@ -10,10 +10,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 include_directories(usr/local/include)
 link_directories(usr/local/lib)
 
-add_executable(pi_c__ main.cpp server.cpp server.h sensor.cpp sensor.h 
+add_executable(pi_c__  MPU6050_6Axis_MotionApps20.h 
+		main.cpp server.cpp server.h sensor.cpp sensor.h 
 		mpuManager.cpp mpuManager.h storageManager.cpp storageManager.h
 		catch.hpp json.hpp MPU6050.cpp MPU6050.h pgmspace.h I2Cdev.cpp
-		I2Cdev.h multiplexer.cpp multiplexer.h MPU6050_6Axis_MotionApps20.h
+		I2Cdev.h multiplexer.cpp multiplexer.h
 		helper_3dmath.h)
 
 target_link_libraries(pi_c__ bcm2835)

@@ -9,6 +9,7 @@
 #include "storageManager.h"
 #include "I2Cdev.h"
 #include "MPU6050.h"
+#include "helper_3dmath.h"
 
 using json = nlohmann::json;
 using namespace std;
@@ -46,6 +47,19 @@ private:
     float zDistance = 0;
 
     MPU6050 accelgyro;
+
+    uint16_t fifocount;
+    uint16_t packetSize;
+    uint8_t fifobuffer[64];
+
+    Quaternion q;
+    VectorInt16 aa;
+    VectorInt16 aaReal;
+    VectorInt16 aaWorld;
+    VectorFloat gravity;
+
+    float eurler[3];
+    float ypr[3];
 
     vector<int16_t> getSensorValues();
 

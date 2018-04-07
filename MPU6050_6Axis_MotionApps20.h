@@ -35,12 +35,12 @@ THE SOFTWARE.
 
 #include "I2Cdev.h"
 #include "helper_3dmath.h"
+#include <thread>
 
 // MotionApps 2.0 DMP implementation, built using the MPU-6050EVB evaluation board
 #define MPU6050_INCLUDE_DMP_MOTIONAPPS20
 
 #include "MPU6050.h"
-
 // Tom Carpenter's conditional PROGMEM code
 // http://forum.arduino.cc/index.php?topic=129407.0
 #ifndef __arm__
@@ -324,9 +324,10 @@ const unsigned char dmpUpdates[MPU6050_DMP_UPDATES_SIZE] PROGMEM = {
 
 uint8_t MPU6050::dmpInitialize() {
     // reset device
-    DEBUG_PRINTLN(F("\n\nResetting MPU6050..."));
+    this_thread::sleep_for(chrono::milliseconds(100));
+    printf("\n\nResetting MPU6050...\n");
     reset();
-    delay(30); // wait after reset
+    this_thread::sleep_for(chrono::milliseconds(100)); // wait after reset
 
     // enable sleep mode and wake cycle
     /*Serial.println(F("Enabling sleep mode..."));
@@ -335,7 +336,7 @@ uint8_t MPU6050::dmpInitialize() {
     setWakeCycleEnabled(true);*/
 
     // disable sleep mode
-    DEBUG_PRINTLN(F("Disabling sleep mode..."));
+    printf("Disabling sleep mode...\n");
     setSleepEnabled(false);
 
     // get MPU hardware revision
@@ -357,16 +358,11 @@ uint8_t MPU6050::dmpInitialize() {
     DEBUG_PRINTLN(otpValid ? F("valid!") : F("invalid!"));
 
     // get X/Y/Z gyro offsets
-    DEBUG_PRINTLN(F("Reading gyro offset TC values..."));
+    printf("Reading gyro offset TC values...");
     int8_t xgOffsetTC = getXGyroOffsetTC();
     int8_t ygOffsetTC = getYGyroOffsetTC();
     int8_t zgOffsetTC = getZGyroOffsetTC();
-    DEBUG_PRINT(F("X gyro offset = "));
-    DEBUG_PRINTLN(xgOffset);
-    DEBUG_PRINT(F("Y gyro offset = "));
-    DEBUG_PRINTLN(ygOffset);
-    DEBUG_PRINT(F("Z gyro offset = "));
-    DEBUG_PRINTLN(zgOffset);
+    printf("X gyro offset =  %i, y offset = %i, z offset = %i\n",xgOffsetTC, ygOffsetTC, zgOffsetTC);
 
     // setup weird slave stuff (?)
     DEBUG_PRINTLN(F("Setting slave 0 address to 0x7F..."));
@@ -377,14 +373,14 @@ uint8_t MPU6050::dmpInitialize() {
     setSlaveAddress(0, 0x68);
     DEBUG_PRINTLN(F("Resetting I2C Master control..."));
     resetI2CMaster();
-    delay(20);
+    this_thread::sleep_for(chrono::milliseconds(20));
 
     // load DMP code into memory banks
     DEBUG_PRINT(F("Writing DMP code to MPU memory banks ("));
     DEBUG_PRINT(MPU6050_DMP_CODE_SIZE);
     DEBUG_PRINTLN(F(" bytes)"));
     if (writeProgMemoryBlock(dmpMemory, MPU6050_DMP_CODE_SIZE)) {
-        DEBUG_PRINTLN(F("Success! DMP code written and verified."));
+        printf("Success! DMP code written and verified.\n");
 
         // write DMP configuration
         DEBUG_PRINT(F("Writing DMP configuration to MPU memory banks ("));
@@ -537,11 +533,11 @@ uint8_t MPU6050::dmpInitialize() {
             resetFIFO();
             getIntStatus();
         } else {
-            DEBUG_PRINTLN(F("ERROR! DMP configuration verification failed."));
+            printf("ERROR! DMP code verification failed.");
             return 2; // configuration block loading failed
         }
     } else {
-        DEBUG_PRINTLN(F("ERROR! DMP code verification failed."));
+        printf("ERROR! DMP code verification failed.");
         return 1; // main binary block loading failed
     }
     return 0; // success
