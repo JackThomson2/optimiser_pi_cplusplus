@@ -16,6 +16,7 @@ using namespace std;
 const auto radConvertor = M_PI / 180.0;
 const double gravityAccel = 9.84016;
 const double sensorOffset = 16384.0;
+const double gyroOffset = 131.0;
 
 class sensor {
 public:

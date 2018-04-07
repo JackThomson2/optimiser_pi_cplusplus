@@ -26,7 +26,7 @@ void mpuManager::startRecording(atomic<bool>& stop) {
     }
     storeJSON();
 
-    printf("I got %lu recordings.\n", Sensor[0].getData()["x"].size());
+    printf("I got %lu recordings.\n", Sensor[0].getData()["ax"].size());
 }
 
 void mpuManager::runMultiTest() {

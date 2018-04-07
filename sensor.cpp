@@ -18,7 +18,11 @@ void sensor::storeNewReading() {
     auto sensorVals = getSensorValues();
     auto normalised = getGravityEffect(sensorVals);
 
-    getDistance(normalised);
+    xDistance += normalised[3];
+    yDistance += normalised[4];
+    zDistance += normalised[5];
+
+    //getDistance(normalised);
 
     axRecordings.emplace_back(normalised[0]);
     ayRecordings.emplace_back(normalised[1]);
@@ -30,6 +34,7 @@ void sensor::storeNewReading() {
 }
 
 json sensor::getData() {
+    printf("\nX change %d Y change %d Z change %d\n", xDistance, yDistance, zDistance);
     return json {
             {"ax", axRecordings},
             {"ay", ayRecordings},
@@ -61,11 +66,15 @@ vector<int16_t> sensor::getSensorValues() {
 
 vector<double> sensor::getGravityEffect(vector<int16_t> input) {
 
-    double x = double(input[0]) / sensorOffset;
-    double y = double(input[1]) / sensorOffset;
-    double z = double(input[2]) / sensorOffset;
+    double ax = double(input[0]) / sensorOffset;
+    double ay = double(input[1]) / sensorOffset;
+    double az = double(input[2]) / sensorOffset;
 
-    double accel[3] = {x, y, z};
+    double gx = double(input[3]) / gyroOffset;
+    double gy = double(input[4]) / gyroOffset;
+    double gz = double(input[5]) / gyroOffset;
+
+    double accel[3] = {ax, ay, az};
     double gravity[3] = {0, 0, 1.0}; // Always vertically downwards at g = 1.0
     double rG[3], rA[3];
     double mA[3];
@@ -109,7 +118,7 @@ vector<double> sensor::getGravityEffect(vector<int16_t> input) {
     rA[1] = (mA[0] * R[0][1] + mA[1] * R[1][1] + mA[2] * R[2][1]) * gravityAccel;
     rA[2] = (mA[0] * R[0][2] + mA[1] * R[1][2] + mA[2] * R[2][2]) * gravityAccel;
 
-    return vector<double> {x, y, z};
+    return vector<double> {ax, ay, az, gx, gy, gz};
 }
 
 void sensor::getDistance(vector<double> accelerations) {

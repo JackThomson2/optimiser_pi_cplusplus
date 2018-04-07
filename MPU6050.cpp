@@ -1792,12 +1792,42 @@ void MPU6050::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int
  */
 void MPU6050::getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz) {
     I2Cdev::readBytes(devAddr, MPU6050_RA_ACCEL_XOUT_H, 14, buffer);
-    *ax = (((int16_t)buffer[0]) << 8) | buffer[1];
-    *ay = (((int16_t)buffer[2]) << 8) | buffer[3];
-    *az = (((int16_t)buffer[4]) << 8) | buffer[5];
-    *gx = (((int16_t)buffer[8]) << 8) | buffer[9];
-    *gy = (((int16_t)buffer[10]) << 8) | buffer[11];
-    *gz = (((int16_t)buffer[12]) << 8) | buffer[13];
+
+    int32_t accelx = (((int16_t)buffer[0]) << 8) + (int16_t)buffer[1];
+    if (accelx >= 0x8000)
+		*ax = -((65535 - accelx) + 1);
+    else
+        *ax = accelx;
+		
+    int32_t accely = (((int16_t)buffer[2]) << 8) + (int16_t)buffer[3];
+    if (accely >= 0x8000)
+		*ay = -((65535 - accely) + 1);
+    else
+        *ay = accely;
+		
+    int32_t accelz = (((int16_t)buffer[4]) << 8) + (int16_t)buffer[5];
+    if (accelz >= 0x8000)
+		*az = -((65535 - accelz) + 1);
+    else
+        *az = accelz;
+
+    int32_t gyrox = (((int16_t)buffer[8]) << 8) + (int16_t)buffer[9];
+    if (gyrox >= 0x8000)
+		*gx = -((65535 - gyrox) + 1);
+    else
+        *gz = gyrox;
+		
+    int32_t gyroy = (((int16_t)buffer[10]) << 8) + (int16_t)buffer[11];
+    if (gyroy >= 0x8000)
+		*gy = -((65535 - gyroy) + 1);
+	else
+        *gy = gyroy;
+
+    int32_t gyroz = (((int16_t)buffer[12]) << 8) + (int16_t)buffer[13];
+    if (gyroz >= 0x8000)
+		*gz = -((65535 - gyroz) + 1);
+    else
+        *gz = gyroz;
 }
 /** Get 3-axis accelerometer readings.
  * These registers store the most recent accelerometer measurements.
