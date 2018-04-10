@@ -5,7 +5,6 @@
 #include <array>
 #include "sensor.h"
 #include "mpuManager.h"
-#include <random>
 
 #include <thread>
 
@@ -19,14 +18,15 @@ void sensor::init() {
     accelgyro.setDMPEnabled(true);
     this_thread::sleep_for(chrono::milliseconds(200));
     packetSize = accelgyro.dmpGetFIFOPacketSize();
+    accelgyro.setDLPFMode(1);
     printf("Connection good %s\n", accelgyro.testConnection() ? "Yes" : "No");
-    printf("Packet Size %i \n\n",packetSize);
+    printf("Packet Size %i \n\n", packetSize);
 }
 
 void sensor::storeNewReading(bool record) {
-    while(true) {
+    while (true) {
         fifocount = accelgyro.getFIFOCount();
-        while (fifocount < packetSize) 
+        while (fifocount < packetSize)
             fifocount = accelgyro.getFIFOCount();
 
         status = accelgyro.getIntStatus();
@@ -37,7 +37,7 @@ void sensor::storeNewReading(bool record) {
         } else if (status & 0x02) {
             uint8_t toTake = floor(fifocount / packetSize);
             toTake *= packetSize;
-            
+
             accelgyro.getFIFOBytes(fifobuffer, toTake);
             cntr += toTake;
 
@@ -55,7 +55,7 @@ void sensor::storeNewReading(bool record) {
             } */
 
             bufferDump.insert(bufferDump.end(), fifobuffer, fifobuffer + toTake);
-            
+
             //printf("Count was %i took %i items.\n", fifocount, toGet);
             return;
         }
@@ -79,7 +79,7 @@ void sensor::resetStores() {
     ayRecordings = json::array();
     azRecordings = json::array();
 
-    printf("Size %i counter %i\n", bufferDump.size(), cntr);
+    printf("Size %lu counter %i\n", bufferDump.size(), cntr);
 }
 
 void sensor::getDistance(vector<double> accelerations) {
