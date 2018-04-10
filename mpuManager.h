@@ -28,6 +28,10 @@ private:
 
     void storeJSON();
 
+    void zeroGyros();
+
+    void resetAllSensors();
+
     void initRecording();
 };
 

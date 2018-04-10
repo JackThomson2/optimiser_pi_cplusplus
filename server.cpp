@@ -19,10 +19,14 @@ server::server() {
 
 void server::startSever() {
     printf("Setting up i2c\n");
+    I2Cdev::enable(true);
     I2Cdev::initialize();
     sensorManager.runMultiTest();
     printf("Initialized i2c\n");
     sensorManager.runInitalisation();
+    running = true;
+
+    sensorManager.startRecording(running);
 
     printf("Starting server\n");
     struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };

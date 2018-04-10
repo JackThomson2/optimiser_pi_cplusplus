@@ -40,7 +40,7 @@ THE SOFTWARE.
 /* used to boolean for setting RPi I2C pins P1-03 (SDA) and P1-05 (SCL) to alternate function ALT0, which enables those pins for I2C interface. 
    setI2Cpin should be false, if the I2C are already configured in alt mode ... */
 
-#define i2c_baudrate 400000
+#define i2c_baudrate 500000
 //uint32_t i2c_baudrate = 400000 ; //400 kHz, 
 
 class I2Cdev {

@@ -12,7 +12,6 @@ void multiplexer::setPath(int path) {
     bcm2835_i2c_setSlaveAddress(I2C_address);
     char pathMessage = path;
     bcm2835_i2c_write(&pathMessage, 1);
-    return;
 }
 
 int multiplexer::getPath() {

@@ -12,7 +12,12 @@ using namespace std;
 
 // With a loop will tell all the sensors to record their information
 void mpuManager::startRecording(atomic<bool>& stop) {
-    initRecording();
+    resetAllSensors();
+    zeroGyros();
+
+    resetAllSensors();
+    return;
+    printf("Gyros have been zero'ed now recording\n\n");
 
     while(stop.load()) {
         auto start_s = chrono::steady_clock::now();
@@ -29,6 +34,35 @@ void mpuManager::startRecording(atomic<bool>& stop) {
     printf("I got %lu recordings.\n", Sensor[0].getData()["ax"].size());
 }
 
+void mpuManager::resetAllSensors() {
+     for (int i = 1; i != 6; i++) {
+        multi.setPath(i);
+        Sensor[i - 1].resetSensor();
+        Sensor[i - 1].resetStores();
+        this_thread::sleep_for(chrono::milliseconds(1));
+    }
+}
+
+void mpuManager::zeroGyros() {
+    auto start_s = chrono::steady_clock::now();
+    auto cntr = 0;
+    while (true) {
+        for (int i = 1; i != 6; i++) {
+            //printf("Checking %i ",i);
+            multi.setPath(i);
+            this_thread::sleep_for(chrono::milliseconds(10));
+            Sensor[i - 1].storeNewReading();
+        }
+        this_thread::sleep_for(chrono::milliseconds(10));
+        cntr++;
+        if (cntr % 50 == 0)
+            printf("Loop no: %i\n", cntr);
+        auto diff = chrono::steady_clock::now() - start_s;
+        if ((chrono::duration<double , milli> (diff).count()) > 10000)
+            return;
+    }
+}
+
 void mpuManager::runMultiTest() {
     printf("Running tests\n");
     for (int i = 1; i != 6; i++) {
@@ -43,14 +77,14 @@ void mpuManager::runInitalisation() {
     for (int i = 1; i != 6; i++) {
         multi.setPath(i);
         this_thread::sleep_for(chrono::milliseconds(200));
-        Sensor[i].init();
+        Sensor[i - 1].init();
     }
 }
 
 void mpuManager::getDeviceReadings() {
-    for (int i = 0; i != 5; i++) {
+    for (int i = 1; i != 6; i++) {
         multi.setPath(i);
-        Sensor[i].storeNewReading();
+        Sensor[i - 1].storeNewReading();
     }
 }
 
@@ -70,11 +104,4 @@ void mpuManager::storeJSON() {
     recording.close();
 
     printf("Saved to file to \"%s\".\n", fileName.c_str());
-}
-
-void mpuManager::initRecording() {
-    I2Cdev::initialize();
-    printf("Initialized i2c\n");
-    for (int i = 0; i != 5; i++)
-        Sensor[i].resetStores();
 }

@@ -14,18 +14,15 @@
 using json = nlohmann::json;
 using namespace std;
 
-const auto radConvertor = M_PI / 180.0;
-const double gravityAccel = 9.84016;
-const double sensorOffset = 16384.0;
-const double gyroOffset = 131.0;
-
 class sensor {
 public:
     void init();
 
-    void storeNewReading();
+    void storeNewReading(bool = true);
 
     json getData();
+
+    void resetSensor();
 
     void resetStores();
 
@@ -33,10 +30,6 @@ private:
     json axRecordings = json::array();
     json ayRecordings = json::array();
     json azRecordings = json::array();
-
-    json gxRecordings = json::array();
-    json gyRecordings = json::array();
-    json gzRecordings = json::array();
 
     float xSpeed = 0;
     float ySpeed = 0;
@@ -46,11 +39,16 @@ private:
     float yDistance = 0;
     float zDistance = 0;
 
+    int cntr = 0;
+
     MPU6050 accelgyro;
 
     uint16_t fifocount;
+    uint8_t status;
     uint16_t packetSize;
-    uint8_t fifobuffer[64];
+    uint8_t fifobuffer[1024];
+
+    vector<uint8_t > bufferDump;
 
     Quaternion q;
     VectorInt16 aa;
@@ -60,10 +58,6 @@ private:
 
     float eurler[3];
     float ypr[3];
-
-    vector<int16_t> getSensorValues();
-
-    vector<double> getGravityEffect(vector<int16_t>);
 
     void getDistance(vector<double>);
 };

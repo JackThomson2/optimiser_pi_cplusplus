@@ -35,6 +35,7 @@ THE SOFTWARE.
 
 #include "I2Cdev.h"
 #include "helper_3dmath.h"
+#include <thread>
 
 // MotionApps 2.0 DMP implementation, built using the MPU-6050EVB evaluation board
 #define MPU6050_INCLUDE_DMP_MOTIONAPPS20
@@ -303,7 +304,7 @@ const unsigned char dmpConfig[MPU6050_DMP_CONFIG_SIZE] PROGMEM = {
         0x07, 0x46, 0x01, 0x9A,                     // CFG_GYRO_SOURCE inv_send_gyro
         0x07, 0x47, 0x04, 0xF1, 0x28, 0x30, 0x38,   // CFG_9 inv_send_gyro -> inv_construct3_fifo
         0x07, 0x6C, 0x04, 0xF1, 0x28, 0x30, 0x38,   // CFG_12 inv_send_accel -> inv_construct3_fifo
-        0x02, 0x16, 0x02, 0x00, 0x01                // D_0_22 inv_set_fifo_rate
+        0x02, 0x16, 0x02, 0x00, 0x05                // D_0_22 inv_set_fifo_rate
 
         // This very last 0x01 WAS a 0x09, which drops the FIFO rate down to 20 Hz. 0x07 is 25 Hz,
         // 0x01 is 100Hz. Going faster than 100Hz (0x00=200Hz) tends to result in very noisy data.
@@ -327,7 +328,7 @@ uint8_t MPU6050::dmpInitialize() {
     // reset device
     DEBUG_PRINTLN(F("\n\nResetting MPU6050..."));
     reset();
-    delay(30); // wait after reset
+    this_thread::sleep_for(chrono::milliseconds(300));// wait after reset
 
     // enable sleep mode and wake cycle
     /*Serial.println(F("Enabling sleep mode..."));
@@ -543,6 +544,7 @@ uint8_t MPU6050::dmpInitialize() {
         DEBUG_PRINTLN(F("ERROR! DMP code verification failed."));
         return 1; // main binary block loading failed
     }
+    printf("All good\n");
     return 0; // success
 }
 
