@@ -23,14 +23,11 @@ void mpuManager::startRecording(atomic<bool>& stop) {
         getDeviceReadings();
         auto diff = chrono::steady_clock::now() - start_s;
 
-        if((chrono::duration<double , milli> (diff).count()) > 1000) {
+        if((chrono::duration<double , milli> (diff).count()) > 10000) {
             stop = false;
-
             storeJSON();
             resetAllSensors();
             return;
-            this_thread::sleep_for(chrono::milliseconds(1));
-            diff = chrono::steady_clock::now() - start_s;
         }
     }
     storeJSON();
@@ -48,18 +45,11 @@ void mpuManager::resetAllSensors() {
 
 void mpuManager::zeroGyros() {
     auto start_s = chrono::steady_clock::now();
-    auto cntr = 1;
     while (true) {
         for (int i = 0; i != 5; i++) {
-            //printf("Checking %i ",i);
             multi.setPath(i);
-            this_thread::sleep_for(chrono::milliseconds(10));
             Sensor[i].storeNewReading();
         }
-        this_thread::sleep_for(chrono::milliseconds(10));
-        cntr++;
-        if (cntr % 50 == 0)
-            printf("Loop no: %i\n", cntr);
         auto diff = chrono::steady_clock::now() - start_s;
         if ((chrono::duration<double , milli> (diff).count()) > 20000)
             return;
@@ -73,28 +63,25 @@ void mpuManager::runMultiTest() {
     this_thread::sleep_for(chrono::milliseconds(10));
     for (int i = 0; i != 5; i++) {
         multi.setPath(i);
-        printf("Reading %i ", i);
         this_thread::sleep_for(chrono::milliseconds(10));
-        printf("Multi reads %i\n", multi.getPath());
     }
 }
 
 void mpuManager::runInitalisation() {
-    printf("Initialising sensors\n");
+    printf("Initialising sensors\n\n");
     for (int i = 0; i != 5; i++) {
         multi.setPath(i);
         this_thread::sleep_for(chrono::milliseconds(200));
         Sensor[i].init();
     }
+    printf("\n\n");
 }
 
 void mpuManager::getDeviceReadings() {
     for (int i = 0; i != 5; i++) {
         multi.setPath(i);
-        this_thread::sleep_for(chrono::milliseconds(5));
         Sensor[i].storeNewReading();
     }
-    this_thread::sleep_for(chrono::milliseconds(5));
 }
 
 void mpuManager::storeJSON() {

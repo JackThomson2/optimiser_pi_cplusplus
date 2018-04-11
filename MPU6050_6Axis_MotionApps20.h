@@ -544,7 +544,6 @@ uint8_t MPU6050::dmpInitialize() {
         DEBUG_PRINTLN(F("ERROR! DMP code verification failed."));
         return 1; // main binary block loading failed
     }
-    printf("All good\n");
     return 0; // success
 }
 

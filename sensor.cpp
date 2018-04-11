@@ -18,9 +18,9 @@ void sensor::init() {
     accelgyro.setDMPEnabled(true);
     this_thread::sleep_for(chrono::milliseconds(200));
     packetSize = accelgyro.dmpGetFIFOPacketSize();
-    accelgyro.setDLPFMode(2);
+    accelgyro.setDLPFMode(1);
+
     printf("Connection good %s\n", accelgyro.testConnection() ? "Yes" : "No");
-    printf("Packet Size %i frame sync %i\n\n", packetSize, accelgyro.getInterruptMode());
 }
 
 void sensor::storeNewReading(bool record) {
@@ -41,7 +41,6 @@ void sensor::storeNewReading(bool record) {
             cntr += toTake;
             return;
         }
-        printf("I fell through\n");
     }
 }
 
@@ -54,9 +53,9 @@ json sensor::getData() {
 
     printf("Size %i\n", axRecordings.size());
     return json {
-            {"ax", axRecordings},
-            {"ay", ayRecordings},
-            {"az", azRecordings}
+            {"x", axRecordings},
+            {"y", ayRecordings},
+            {"z", azRecordings}
     };
 }
 
@@ -65,7 +64,6 @@ void sensor::resetStores() {
     ayRecordings = json::array();
     azRecordings = json::array();
     
-    printf("Size %lu counter %i records %d\n", bufferDump.size(), cntr, cntr / 42);
     cntr = 0;
     bufferDump.clear();
 }
@@ -85,7 +83,6 @@ void sensor::getDistance(vector<double> accelerations) {
 }
 
 void sensor::processData() {
-    auto cntr = 0;
     for (int i = 0; i < bufferDump.size(); i += packetSize) {
         for (int x = 0; x != packetSize; x++)
             fifobuffer[x] = bufferDump[x + i];
@@ -99,6 +96,5 @@ void sensor::processData() {
         axRecordings.emplace_back(aaWorld.x);
         ayRecordings.emplace_back(aaWorld.y);
         azRecordings.emplace_back(aaWorld.z);
-        cntr++;
     }
 }
