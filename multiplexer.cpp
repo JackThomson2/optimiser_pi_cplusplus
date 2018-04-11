@@ -5,13 +5,16 @@
 #include "multiplexer.h"
 #include <bcm2835.h>
 #include <stdio.h>
+#include "I2Cdev.h"
 
 multiplexer::multiplexer() {}
 
 void multiplexer::setPath(int path) {
-    bcm2835_i2c_setSlaveAddress(I2C_address);
-    char pathMessage = path;
-    bcm2835_i2c_write(&pathMessage, 1);
+    uint8_t config = 0x00;
+    config |= (0x01 << path);
+    I2Cdev::writeByte(I2C_address, 0x04, 0x00);
+
+    I2Cdev::writeByte(I2C_address, 0x04, config);
 }
 
 int multiplexer::getPath() {

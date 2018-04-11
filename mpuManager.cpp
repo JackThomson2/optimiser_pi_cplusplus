@@ -16,76 +16,85 @@ void mpuManager::startRecording(atomic<bool>& stop) {
     zeroGyros();
 
     resetAllSensors();
-    return;
     printf("Gyros have been zero'ed now recording\n\n");
 
+    auto start_s = chrono::steady_clock::now();
     while(stop.load()) {
-        auto start_s = chrono::steady_clock::now();
         getDeviceReadings();
         auto diff = chrono::steady_clock::now() - start_s;
 
-        while((chrono::duration<double , milli> (diff).count()) < WAIT_TIME) {
+        if((chrono::duration<double , milli> (diff).count()) > 1000) {
+            stop = false;
+
+            storeJSON();
+            resetAllSensors();
+            return;
             this_thread::sleep_for(chrono::milliseconds(1));
             diff = chrono::steady_clock::now() - start_s;
         }
     }
     storeJSON();
-
     printf("I got %lu recordings.\n", Sensor[0].getData()["ax"].size());
 }
 
 void mpuManager::resetAllSensors() {
-     for (int i = 1; i != 6; i++) {
+     for (int i = 0; i != 5; i++) {
         multi.setPath(i);
-        Sensor[i - 1].resetSensor();
-        Sensor[i - 1].resetStores();
+        Sensor[i].resetSensor();
+        Sensor[i].resetStores();
         this_thread::sleep_for(chrono::milliseconds(1));
     }
 }
 
 void mpuManager::zeroGyros() {
     auto start_s = chrono::steady_clock::now();
-    auto cntr = 0;
+    auto cntr = 1;
     while (true) {
-        for (int i = 1; i != 6; i++) {
+        for (int i = 0; i != 5; i++) {
             //printf("Checking %i ",i);
             multi.setPath(i);
             this_thread::sleep_for(chrono::milliseconds(10));
-            Sensor[i - 1].storeNewReading();
+            Sensor[i].storeNewReading();
         }
         this_thread::sleep_for(chrono::milliseconds(10));
         cntr++;
         if (cntr % 50 == 0)
             printf("Loop no: %i\n", cntr);
         auto diff = chrono::steady_clock::now() - start_s;
-        if ((chrono::duration<double , milli> (diff).count()) > 10000)
+        if ((chrono::duration<double , milli> (diff).count()) > 20000)
             return;
     }
 }
 
 void mpuManager::runMultiTest() {
     printf("Running tests\n");
-    for (int i = 1; i != 6; i++) {
+
+    multi.setPath(8);
+    this_thread::sleep_for(chrono::milliseconds(10));
+    for (int i = 0; i != 5; i++) {
         multi.setPath(i);
         printf("Reading %i ", i);
-        printf("Multi reads %i\n\n", multi.getPath());
+        this_thread::sleep_for(chrono::milliseconds(10));
+        printf("Multi reads %i\n", multi.getPath());
     }
 }
 
 void mpuManager::runInitalisation() {
     printf("Initialising sensors\n");
-    for (int i = 1; i != 6; i++) {
+    for (int i = 0; i != 5; i++) {
         multi.setPath(i);
         this_thread::sleep_for(chrono::milliseconds(200));
-        Sensor[i - 1].init();
+        Sensor[i].init();
     }
 }
 
 void mpuManager::getDeviceReadings() {
-    for (int i = 1; i != 6; i++) {
+    for (int i = 0; i != 5; i++) {
         multi.setPath(i);
-        Sensor[i - 1].storeNewReading();
+        this_thread::sleep_for(chrono::milliseconds(5));
+        Sensor[i].storeNewReading();
     }
+    this_thread::sleep_for(chrono::milliseconds(5));
 }
 
 void mpuManager::storeJSON() {

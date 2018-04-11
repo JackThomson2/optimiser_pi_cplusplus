@@ -60,6 +60,8 @@ private:
     float ypr[3];
 
     void getDistance(vector<double>);
+
+    void processData();
 };
 
 

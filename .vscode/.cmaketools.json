@@ -24,18 +24,12 @@
                 "buildDirectory": "/home/pi/Documents/optimiser_pi_cplusplus/build",
                 "fileGroups": [
                   {
-                    "isGenerated": false,
-                    "sources": [
-                      "server.h",
-                      "sensor.h",
-                      "mpuManager.h",
-                      "storageManager.h",
-                      "catch.hpp",
-                      "json.hpp"
-                    ]
-                  },
-                  {
-                    "compileFlags": "-Wall -Wextra -g   -std=gnu++1z",
+                    "compileFlags": "-Wall -Wextra -pthread -lbluetooth -g   -std=gnu++1z",
+                    "includePath": [
+                      {
+                        "path": "/home/pi/Documents/optimiser_pi_cplusplus/usr/local/include"
+                      }
+                    ],
                     "isGenerated": false,
                     "language": "CXX",
                     "sources": [
@@ -43,12 +37,34 @@
                       "server.cpp",
                       "sensor.cpp",
                       "mpuManager.cpp",
-                      "storageManager.cpp"
+                      "storageManager.cpp",
+                      "MPU6050.cpp",
+                      "I2Cdev.cpp",
+                      "multiplexer.cpp"
+                    ]
+                  },
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "MPU6050_6Axis_MotionApps20.h",
+                      "server.h",
+                      "sensor.h",
+                      "mpuManager.h",
+                      "storageManager.h",
+                      "catch.hpp",
+                      "json.hpp",
+                      "MPU6050.h",
+                      "pgmspace.h",
+                      "I2Cdev.h",
+                      "multiplexer.h",
+                      "helper_3dmath.h"
                     ]
                   }
                 ],
                 "fullName": "pi_c__",
-                "linkLanguageFlags": "-Wall -Wextra -g",
+                "linkLanguageFlags": "-Wall -Wextra -pthread -lbluetooth -g",
+                "linkLibraries": "-Wl,-rpath,/home/pi/Documents/optimiser_pi_cplusplus/usr/local/lib -lbcm2835",
+                "linkPath": "-L/home/pi/Documents/optimiser_pi_cplusplus/usr/local/lib",
                 "linkerLanguage": "CXX",
                 "name": "pi_c__",
                 "sourceDirectory": "/home/pi/Documents/optimiser_pi_cplusplus",
@@ -59,7 +75,7 @@
         ]
       }
     ],
-    "cookie": "0.9630418537071024",
+    "cookie": "0.6348727119542383",
     "inReplyTo": "codemodel",
     "type": "reply"
   }
