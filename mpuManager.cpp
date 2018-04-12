@@ -22,7 +22,7 @@ void mpuManager::startRecording(atomic<bool>& stop) {
         getDeviceReadings();
     }
     storeJSON();
-    resetAllSensors()
+    resetAllSensors();
     printf("I got %lu recordings.\n", Sensor[0].getData()["x"].size());
 }
 
