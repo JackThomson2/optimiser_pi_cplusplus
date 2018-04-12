@@ -30,17 +30,11 @@ private:
     json axRecordings = json::array();
     json ayRecordings = json::array();
     json azRecordings = json::array();
+    json stats = {};
 
     const double OFFSETS = 16384.0;
     const double GRAVITY = 9.807;
-
-    float xSpeed = 0;
-    float ySpeed = 0;
-    float zSpeed = 0;
-
-    float xDistance = 0;
-    float yDistance = 0;
-    float zDistance = 0;
+    const double TIMEMULTIPLIER = 1.0 / 100.0;
 
     int cntr = 0;
 
@@ -61,8 +55,6 @@ private:
 
     float eurler[3];
     float ypr[3];
-
-    void getDistance(vector<double>);
 
     void processData();
 };

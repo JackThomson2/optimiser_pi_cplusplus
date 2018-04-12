@@ -43,7 +43,7 @@ void mpuManager::zeroGyros() {
             Sensor[i].storeNewReading();
         }
         auto diff = chrono::steady_clock::now() - start_s;
-        if ((chrono::duration<double , milli> (diff).count()) > 20000)
+        if ((chrono::duration<double , milli> (diff).count()) > 10000)
             return;
     }
 }

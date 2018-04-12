@@ -55,7 +55,8 @@ json sensor::getData() {
     return json {
             {"x", axRecordings},
             {"y", ayRecordings},
-            {"z", azRecordings}
+            {"z", azRecordings},
+            {"stats", stats}
     };
 }
 
@@ -68,21 +69,23 @@ void sensor::resetStores() {
     bufferDump.clear();
 }
 
-void sensor::getDistance(vector<double> accelerations) {
-    double xSpeedChange = accelerations[0] * RECORDS_PER_SECOND;
-    double ySpeedChange = accelerations[1] * RECORDS_PER_SECOND;
-    double zSpeedChange = accelerations[2] * RECORDS_PER_SECOND;
-
-    xSpeed += xSpeedChange;
-    ySpeed += ySpeedChange;
-    zSpeed += zSpeedChange;
-
-    xDistance += xSpeedChange * RECORDS_PER_SECOND;
-    yDistance += ySpeedChange * RECORDS_PER_SECOND;
-    zDistance += zSpeedChange * RECORDS_PER_SECOND;
-}
-
 void sensor::processData() {
+    double xSpeed = 0.0;
+    double ySpeed = 0.0;
+    double zSpeed = 0.0;
+
+    double xDistance = 0.0;
+    double yDistance = 0.0;
+    double zDistance = 0.0;
+
+    double xMin = numeric_limits<double>::max();
+    double yMin = numeric_limits<double>::max();
+    double zMin = numeric_limits<double>::max();
+
+    double xMax = numeric_limits<double>::min();
+    double yMax = numeric_limits<double>::min();
+    double zMax = numeric_limits<double>::min();
+
     for (int i = 0; i < bufferDump.size(); i += packetSize) {
         for (int x = 0; x != packetSize; x++)
             fifobuffer[x] = bufferDump[x + i];
@@ -97,8 +100,47 @@ void sensor::processData() {
         double y = (double(aaWorld.y) / OFFSETS) * GRAVITY;
         double z = (double(aaWorld.z) / OFFSETS) * GRAVITY;
 
+        xSpeed += x * TIMEMULTIPLIER;
+        ySpeed += y * TIMEMULTIPLIER;
+        zSpeed += z * TIMEMULTIPLIER;
+
+        xDistance += xSpeed * TIMEMULTIPLIER;
+        yDistance += ySpeed * TIMEMULTIPLIER;
+        zDistance += zSpeed * TIMEMULTIPLIER;
+
+        if (xSpeed > xMax)
+            xMax = xSpeed;
+        
+        if (xSpeed < xMin)
+            xMin = xSpeed;
+
+        if (ySpeed > yMax)
+            yMax = ySpeed;
+        
+        if (ySpeed < yMin)
+            yMin = ySpeed;
+
+        if (zSpeed > zMax)
+            zMax = zSpeed;
+        
+        if (zSpeed < zMin)
+            xMin = xSpeed;        
+
         axRecordings.emplace_back(x);
         ayRecordings.emplace_back(y);
         azRecordings.emplace_back(z);
     }
+    stats = {
+        {"xDistance", xDistance},
+        {"yDistance", yDistance},
+        {"zDistance", zDistance},
+
+        {"xMax", xMax},
+        {"yMax", yMax},
+        {"zMax", zMax},
+
+        {"xMin", xMin},
+        {"yMin", yMin},
+        {"zMin", zMin}
+    };
 }
