@@ -18,20 +18,12 @@ void mpuManager::startRecording(atomic<bool>& stop) {
     resetAllSensors();
     printf("Gyros have been zero'ed now recording\n\n");
 
-    auto start_s = chrono::steady_clock::now();
     while(stop.load()) {
         getDeviceReadings();
-        auto diff = chrono::steady_clock::now() - start_s;
-
-        if((chrono::duration<double , milli> (diff).count()) > 10000) {
-            stop = false;
-            storeJSON();
-            resetAllSensors();
-            return;
-        }
     }
     storeJSON();
-    printf("I got %lu recordings.\n", Sensor[0].getData()["ax"].size());
+    resetAllSensors()
+    printf("I got %lu recordings.\n", Sensor[0].getData()["x"].size());
 }
 
 void mpuManager::resetAllSensors() {

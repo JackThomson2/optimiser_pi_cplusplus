@@ -31,6 +31,9 @@ private:
     json ayRecordings = json::array();
     json azRecordings = json::array();
 
+    const double OFFSETS = 16384.0;
+    const double GRAVITY = 9.807;
+
     float xSpeed = 0;
     float ySpeed = 0;
     float zSpeed = 0;

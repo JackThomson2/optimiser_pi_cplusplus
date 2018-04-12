@@ -24,9 +24,6 @@ void server::startSever() {
     sensorManager.runMultiTest();
     printf("Initialized i2c\n");
     sensorManager.runInitalisation();
-    running = true;
-
-    sensorManager.startRecording(running);
 
     printf("Starting server\n");
     struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };

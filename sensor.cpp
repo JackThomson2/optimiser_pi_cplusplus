@@ -20,7 +20,7 @@ void sensor::init() {
     packetSize = accelgyro.dmpGetFIFOPacketSize();
     accelgyro.setDLPFMode(1);
 
-    printf("Connection good %s\n", accelgyro.testConnection() ? "Yes" : "No");
+    printf("Connection good %s init success %i\n", accelgyro.testConnection() ? "Yes" : "No", info);
 }
 
 void sensor::storeNewReading(bool record) {
@@ -93,8 +93,12 @@ void sensor::processData() {
         accelgyro.dmpGetLinearAccel(&aaReal, &aa, &gravity);    
         accelgyro.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
-        axRecordings.emplace_back(aaWorld.x);
-        ayRecordings.emplace_back(aaWorld.y);
-        azRecordings.emplace_back(aaWorld.z);
+        double x = (double(aaWorld.x) / OFFSETS) * GRAVITY;
+        double y = (double(aaWorld.y) / OFFSETS) * GRAVITY;
+        double z = (double(aaWorld.z) / OFFSETS) * GRAVITY;
+
+        axRecordings.emplace_back(x);
+        ayRecordings.emplace_back(y);
+        azRecordings.emplace_back(z);
     }
 }
