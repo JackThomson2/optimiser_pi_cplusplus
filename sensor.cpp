@@ -10,6 +10,7 @@
 
 using json = nlohmann::json;
 
+// This initialises the accelerometer ready for reading
 void sensor::init() {
     accelgyro.initialize();
     this_thread::sleep_for(chrono::milliseconds(200));
@@ -23,6 +24,7 @@ void sensor::init() {
     printf("Connection good %s init success %i\n", accelgyro.testConnection() ? "Yes" : "No", info);
 }
 
+// This is used read the cache from the sensors and dump into the buffer to save time
 void sensor::storeNewReading(bool record) {
     while (true) {
         fifocount = accelgyro.getFIFOCount();
@@ -44,31 +46,35 @@ void sensor::storeNewReading(bool record) {
     }
 }
 
+//This is called to reset the FIFO of the sensor
 void sensor::resetSensor() {
     accelgyro.resetFIFO();
 }
 
+///This function is called to get a wrapped up object of data
 json sensor::getData() {
     processData();
 
     printf("Size %i\n", axRecordings.size());
     return json {
-            {"x", axRecordings},
-            {"y", ayRecordings},
-            {"z", azRecordings},
+            {"x",     axRecordings},
+            {"y",     ayRecordings},
+            {"z",     azRecordings},
             {"stats", stats}
     };
 }
 
+// This clears all the stores into fresh state
 void sensor::resetStores() {
     axRecordings = json::array();
     ayRecordings = json::array();
     azRecordings = json::array();
-    
+
     cntr = 0;
     bufferDump.clear();
 }
 
+// This parses the quickly dumped data into usable information
 void sensor::processData() {
     double xSpeed = 0.0;
     double ySpeed = 0.0;
@@ -89,11 +95,11 @@ void sensor::processData() {
     for (int i = 0; i < bufferDump.size(); i += packetSize) {
         for (int x = 0; x != packetSize; x++)
             fifobuffer[x] = bufferDump[x + i];
-            
+
         accelgyro.dmpGetQuaternion(&q, fifobuffer);
         accelgyro.dmpGetAccel(&aa, fifobuffer);
         accelgyro.dmpGetGravity(&gravity, &q);
-        accelgyro.dmpGetLinearAccel(&aaReal, &aa, &gravity);    
+        accelgyro.dmpGetLinearAccel(&aaReal, &aa, &gravity);
         accelgyro.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
         double x = (double(aaWorld.x) / OFFSETS) * GRAVITY;
@@ -110,21 +116,21 @@ void sensor::processData() {
 
         if (xSpeed > xMax)
             xMax = xSpeed;
-        
+
         if (xSpeed < xMin)
             xMin = xSpeed;
 
         if (ySpeed > yMax)
             yMax = ySpeed;
-        
+
         if (ySpeed < yMin)
             yMin = ySpeed;
 
         if (zSpeed > zMax)
             zMax = zSpeed;
-        
+
         if (zSpeed < zMin)
-            xMin = xSpeed;        
+            xMin = xSpeed;
 
         axRecordings.emplace_back(x);
         ayRecordings.emplace_back(y);
@@ -132,21 +138,21 @@ void sensor::processData() {
     }
 
     stats = {
-        {"xDistance", xDistance},
-        {"yDistance", yDistance},
-        {"zDistance", zDistance},
+            {"xDistance", xDistance},
+            {"yDistance", yDistance},
+            {"zDistance", zDistance},
 
-        {"xMax", xMax},
-        {"yMax", yMax},
-        {"zMax", zMax},
+            {"xMax",      xMax},
+            {"yMax",      yMax},
+            {"zMax",      zMax},
 
-        {"xMin", xMin},
-        {"yMin", yMin},
-        {"zMin", zMin}
+            {"xMin",      xMin},
+            {"yMin",      yMin},
+            {"zMin",      zMin}
     };
 }
 
-
+// This function is used to find a variance in data in a specific region
 double sensor::getVarience(vector<double> input, int size, bool absolute, bool max) {
     if (input.size() < size)
         return 0;
@@ -166,7 +172,7 @@ double sensor::getVarience(vector<double> input, int size, bool absolute, bool m
     return target;
 }
 
-
+// Used to calculate the range of input vector,
 double sensor::getRange(vector<double> input, bool absolute) {
     if (input.size() < 1)
         return 0.0;
@@ -206,8 +212,9 @@ TEST_CASE("Checking sensor", "[sensor]") {
 
         snsr.init();
         snsr.storeNewReading();
-
         snsr.resetStores();
+
+        auto res = snsr.getData();
 
         REQUIRE(res["x"].empty());
         REQUIRE(res["y"].empty());

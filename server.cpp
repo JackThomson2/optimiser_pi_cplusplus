@@ -12,6 +12,7 @@ using namespace std;
 
 server::server() = default;
 
+// Main loop of the application, it instantiates the server and listens for requests
 void server::startSever() {
     printf("Setting up i2c\n");
     I2Cdev::enable(true);
@@ -21,8 +22,8 @@ void server::startSever() {
     sensorManager.runInitialisation();
 
     printf("Starting server\n");
-    struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
-    char buf[1024] = { 0 };
+    struct sockaddr_rc loc_addr = {0 }, rem_addr = {0 };
+    char buf[1024] = {0 };
     int s, client, bytes_read;
     char address[18] = "B8:27:EB:D9:30:C6";
     socklen_t opt = sizeof(rem_addr);
@@ -72,7 +73,7 @@ void server::startSever() {
             } else {
                 close(client);
                 close(s);
-                client = false;  
+                client = false;
                 continue;
             }
         }
@@ -85,6 +86,7 @@ void server::startSever() {
     close(s);
 }
 
+// Used to parse request and offload the result to specified functions
 string server::checkRequest(const string &request) {
     if (request == "q") {
         return "stop";
@@ -104,6 +106,7 @@ string server::checkRequest(const string &request) {
     return "";
 }
 
+// Loads a specific file from storage and returns the json
 string server::getFile(string request) {
     auto requestLength = request.length();
     auto fileName = request.substr(26, requestLength - 30);
@@ -111,10 +114,12 @@ string server::getFile(string request) {
     return storage.getFileByName(fileName).dump();
 }
 
+// Quick wrapper which loads all the file names from storage
 string server::getFiles() {
-   return storage.getFileNamesJson();
+    return storage.getFileNamesJson();
 }
 
+// Launches a new thread which is assigned to recordingThread
 void server::startRecording() {
     if (running)
         return;
@@ -124,6 +129,7 @@ void server::startRecording() {
     printf("Recording...\n");
 }
 
+// Stops the recording thread if running
 void server::stopRecording() {
     if (!running)
         return;

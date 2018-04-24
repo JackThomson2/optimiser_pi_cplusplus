@@ -8,6 +8,7 @@
 
 multiplexer::multiplexer() = default;
 
+// This method sets the selected path to the requested path
 void multiplexer::setPath(int path) {
     uint8_t config = 0x00;
     config |= (0x01 << path);
@@ -16,6 +17,7 @@ void multiplexer::setPath(int path) {
     I2Cdev::writeByte(I2C_address, 0x04, config);
 }
 
+// A quick methof used for retrieving the path the multiplexer is pointing too
 int multiplexer::getPath() {
     bcm2835_i2c_setSlaveAddress(I2C_address);
     char result;

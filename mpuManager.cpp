@@ -26,8 +26,9 @@ void mpuManager::startRecording(atomic<bool>& stop) {
     printf("I got %lu recordings.\n", Sensor[0].getData()["x"].size());
 }
 
+// This is a quick loop for resetting all sensors
 void mpuManager::resetAllSensors() {
-     for (int i = 0; i != 5; i++) {
+    for (int i = 0; i != 5; i++) {
         multi.setPath(i);
         Sensor[i].resetSensor();
         Sensor[i].resetStores();
@@ -35,6 +36,7 @@ void mpuManager::resetAllSensors() {
     }
 }
 
+// This is a the 10 second wait which takes place as the gyroscope zero themselves
 void mpuManager::zeroGyros() {
     auto start_s = chrono::steady_clock::now();
     while (true) {
@@ -48,6 +50,7 @@ void mpuManager::zeroGyros() {
     }
 }
 
+// Quick test to see if the multiplexer is running as expected
 bool mpuManager::runMultiTest() {
     printf("Running tests\n");
 
@@ -65,6 +68,7 @@ bool mpuManager::runMultiTest() {
     return true;
 }
 
+// Loop for making sure all the sensors are setup
 void mpuManager::runInitialisation() {
     printf("Initialising sensors\n\n");
     for (int i = 0; i != 5; i++) {
@@ -75,6 +79,7 @@ void mpuManager::runInitialisation() {
     printf("\n\n");
 }
 
+// This loop runs through all the sensors and runs the function getting them to take a new recording
 void mpuManager::getDeviceReadings() {
     for (int i = 0; i != 5; i++) {
         multi.setPath(i);

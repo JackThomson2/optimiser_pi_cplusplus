@@ -8,6 +8,8 @@
 
 using namespace std;
 
+// Used to load all the files from the specified directory
+// stores them all in the file names variable
 void storageManager::loadAllFiles() {
     fileNames = {};
     glob_t glob_result{};
@@ -19,6 +21,8 @@ void storageManager::loadAllFiles() {
 
 }
 
+// Used as a function get getting a record by name
+// if an item is not already cached will request a load
 json storageManager::getFileByName(string name) {
     name = getNameFromRequest(name);
 
@@ -28,6 +32,8 @@ json storageManager::getFileByName(string name) {
     return fileData[name];
 }
 
+// Used to get the file names and return them as JSON
+// data is converted to Javascript time
 string storageManager::getFileNamesJson() {
     loadAllFiles();
     json info = json::array();
@@ -39,12 +45,15 @@ string storageManager::getFileNamesJson() {
     return info.dump();
 }
 
+// Used to load all the file names and return the vector
 vector<string> storageManager::getFileNames() {
     loadAllFiles();
-    
+
     return fileNames;
 }
 
+
+// Used to load json directly from a file
 json storageManager::getJsonFromFile(string location) {
     ifstream file(location);
     if (!file.good() || !file.is_open())
@@ -61,12 +70,14 @@ json storageManager::getJsonFromFile(string location) {
     return json::parse(result);
 }
 
+// Used to get teh name used for sending
 string storageManager::getSentName(string requestWord) {
     int totalLength = requestWord.length();
     int endLoc = totalLength - initalLength - 7;
     return requestWord.substr(initalLength, endLoc);
 }
 
+// Appends the file type to a file from a request
 string storageManager::getNameFromRequest(string requestWord) {
     return storageLocation + requestWord + ".record";
 }
