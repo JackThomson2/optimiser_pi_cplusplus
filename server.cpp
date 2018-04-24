@@ -3,9 +3,6 @@
 //
 
 #include "server.h"
-#include "I2Cdev.h"
-#include <iostream>
-#include <stdio.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <bluetooth/bluetooth.h>
@@ -23,7 +20,7 @@ void server::startSever() {
     I2Cdev::initialize();
     sensorManager.runMultiTest();
     printf("Initialized i2c\n");
-    sensorManager.runInitalisation();
+    sensorManager.runInitialisation();
 
     printf("Starting server\n");
     struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };

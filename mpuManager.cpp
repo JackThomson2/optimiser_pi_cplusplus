@@ -6,7 +6,7 @@
 #include <thread>
 #include <iostream>
 #include <fstream>
-#include <atomic>
+#include "catch.hpp"
 
 using namespace std;
 
@@ -48,7 +48,7 @@ void mpuManager::zeroGyros() {
     }
 }
 
-void mpuManager::runMultiTest() {
+bool mpuManager::runMultiTest() {
     printf("Running tests\n");
 
     multi.setPath(8);
@@ -56,10 +56,16 @@ void mpuManager::runMultiTest() {
     for (int i = 0; i != 5; i++) {
         multi.setPath(i);
         this_thread::sleep_for(chrono::milliseconds(10));
+        uint8_t expected = 0x00;
+        expected |= (0x01 << i);
+        if (expected != multi.getPath())
+            return false;
     }
+
+    return true;
 }
 
-void mpuManager::runInitalisation() {
+void mpuManager::runInitialisation() {
     printf("Initialising sensors\n\n");
     for (int i = 0; i != 5; i++) {
         multi.setPath(i);
@@ -76,6 +82,7 @@ void mpuManager::getDeviceReadings() {
     }
 }
 
+//Used to store the data directly from the sensors
 void mpuManager::storeJSON() {
     json returnJson = json::array();
 
@@ -92,4 +99,39 @@ void mpuManager::storeJSON() {
     recording.close();
 
     printf("Saved to file to \"%s\".\n", fileName.c_str());
+}
+
+TEST_CASE("Checking manager", "[mpuManager]") {
+
+    // Check that all the tests run successfully
+    SECTION(" check that sensors initialise properly ") {
+        mpuManager mpu;
+
+        mpu.runInitialisation();
+    }
+
+    // Check that all the tests run successfully
+    SECTION(" check that multiplexer tests work as expected ") {
+        mpuManager mpu;
+
+        REQUIRE(mpu.runMultiTest());
+    }
+
+    // Test that I can create a new recording and the number of items increases
+    SECTION(" check that creating a new recording increases the number ") {
+        mpuManager mpu;
+        storageManager store;
+
+        unsigned long initialSize = store.getFileNames().size();
+        atomic<bool> running{true};
+
+        auto recordingThread = thread(&mpuManager::startRecording, mpu, ref(running));
+        this_thread::sleep_for(chrono::milliseconds(100));
+
+        running = false;
+        recordingThread.join();
+
+        REQUIRE(store.getFileNames().size() > initialSize);
+    }
+
 }

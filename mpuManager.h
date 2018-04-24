@@ -16,9 +16,9 @@ class mpuManager {
 public:
     void startRecording(std::atomic<bool>&);
 
-    void runMultiTest();
+    bool runMultiTest();
 
-    void runInitalisation();
+    void runInitialisation();
 private:
     sensor Sensor[6];
 
