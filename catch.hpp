@@ -1,6 +1,6 @@
 /*
- *  Catch v2.2.1
- *  Generated: 2018-03-11 12:01:31.654719
+ *  Catch v2.2.2
+ *  Generated: 2018-04-06 12:05:03.186665
  *  ----------------------------------------------------------
  *  This file has been merged from multiple headers. Please don't edit it directly
  *  Copyright (c) 2018 Two Blue Cubes Ltd. All rights reserved.
@@ -15,7 +15,7 @@
 
 #define CATCH_VERSION_MAJOR 2
 #define CATCH_VERSION_MINOR 2
-#define CATCH_VERSION_PATCH 1
+#define CATCH_VERSION_PATCH 2
 
 #ifdef __clang__
 #    pragma clang system_header
@@ -37,9 +37,9 @@
 #       pragma clang diagnostic ignored "-Wcovered-switch-default"
 #    endif
 #elif defined __GNUC__
-#    pragma GCC diagnostic ignored "-Wunused-variable"
 #    pragma GCC diagnostic ignored "-Wparentheses"
 #    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-variable"
 #    pragma GCC diagnostic ignored "-Wpadded"
 #endif
 // end catch_suppress_warnings.h
@@ -62,9 +62,7 @@
 // start catch_platform.h
 
 #ifdef __APPLE__
-
 # include <TargetConditionals.h>
-
 # if TARGET_OS_OSX == 1
 #  define CATCH_PLATFORM_MAC
 # elif TARGET_OS_IPHONE == 1
@@ -273,7 +271,6 @@ namespace Catch {
 
     protected:
         NonCopyable();
-
         virtual ~NonCopyable();
     };
 
@@ -312,7 +309,6 @@ namespace Catch {
     struct StreamEndStop {
         std::string operator+() const;
     };
-
     template<typename T>
     T const &operator+(T const &value, StreamEndStop) {
         return value;
@@ -350,14 +346,12 @@ namespace Catch {
 
     struct ITestInvoker {
         virtual void invoke() const = 0;
-
         virtual ~ITestInvoker();
     };
 
     using ITestCasePtr = std::shared_ptr<ITestInvoker>;
 
     class TestCase;
-
     struct IConfig;
 
     struct ITestCaseRegistry {
@@ -463,7 +457,6 @@ namespace Catch {
         auto empty() const noexcept -> bool {
             return m_size == 0;
         }
-
         auto size() const noexcept -> size_type {
             return m_size;
         }
@@ -481,7 +474,6 @@ namespace Catch {
 
     private: // ownership queries - may not be consistent between calls
         auto isOwned() const noexcept -> bool;
-
         auto isSubstring() const noexcept -> bool;
     };
 
@@ -507,7 +499,6 @@ namespace Catch {
     template<typename C>
     class TestInvokerAsMethod : public ITestInvoker {
         void (C::*m_testAsMethod)();
-
     public:
         TestInvokerAsMethod(void (C::*testAsMethod)()) noexcept : m_testAsMethod(testAsMethod) {}
 
@@ -527,7 +518,6 @@ namespace Catch {
 
     struct NameAndTags {
         NameAndTags(StringRef const &name_ = StringRef(), StringRef const &tags_ = StringRef()) noexcept;
-
         StringRef name;
         StringRef tags;
     };
@@ -535,7 +525,6 @@ namespace Catch {
     struct AutoReg : NonCopyable {
         AutoReg(ITestInvoker *invoker, SourceLineInfo const &lineInfo, StringRef const &classOrMethod,
                 NameAndTags const &nameAndTags) noexcept;
-
         ~AutoReg();
     };
 
@@ -544,7 +533,7 @@ namespace Catch {
 #if defined(CATCH_CONFIG_DISABLE)
 #define INTERNAL_CATCH_TESTCASE_NO_REGISTRATION( TestName, ... ) \
         static void TestName()
-#define INTERNAL_CATCH_TESTCASE_METHOD_NO_REGISTRATION( TestName, ClassName, ... ) \
+    #define INTERNAL_CATCH_TESTCASE_METHOD_NO_REGISTRATION( TestName, ClassName, ... ) \
         namespace{                        \
             struct TestName : ClassName { \
                 void test();              \
@@ -703,7 +692,6 @@ namespace Catch {
         std::ostream *m_oss;
     public:
         ReusableStringStream();
-
         ~ReusableStringStream();
 
         auto str() const -> std::string;
@@ -820,11 +808,22 @@ namespace Catch {
             return CATCH_CONFIG_FALLBACK_STRINGIFIER(value);
 #endif
         }
-
         template<typename T>
         typename std::enable_if<std::is_enum<T>::value, std::string>::type convertUnstreamable(T const &value) {
             return convertUnknownEnumToString(value);
         }
+
+#if defined(_MANAGED)
+        //! Convert a CLR string to a utf8 std::string
+        template<typename T>
+        std::string clrReferenceToString( T^ ref ) {
+            if (ref == nullptr)
+                return std::string("null");
+            auto bytes = System::Text::Encoding::UTF8->GetBytes(ref->ToString());
+            cli::pin_ptr<System::Byte> p = &bytes[0];
+            return std::string(reinterpret_cast<char const *>(p), bytes->Length);
+        }
+#endif
 
     } // namespace Detail
 
@@ -863,6 +862,13 @@ namespace Catch {
             return ::Catch::Detail::stringify(static_cast<typename std::underlying_type<E>::type>(e));
         }
 
+#if defined(_MANAGED)
+        template <typename T>
+        std::string stringify( T^ e ) {
+            return ::Catch::StringMaker<T^>::convert(e);
+        }
+#endif
+
     } // namespace Detail
 
     // Some predefined specializations
@@ -871,58 +877,51 @@ namespace Catch {
     struct StringMaker<std::string> {
         static std::string convert(const std::string &str);
     };
-
 #ifdef CATCH_CONFIG_WCHAR
-
     template<>
     struct StringMaker<std::wstring> {
         static std::string convert(const std::wstring &wstr);
     };
-
 #endif
 
     template<>
     struct StringMaker<char const *> {
         static std::string convert(char const *str);
     };
-
     template<>
     struct StringMaker<char *> {
         static std::string convert(char *str);
     };
 
 #ifdef CATCH_CONFIG_WCHAR
-
     template<>
     struct StringMaker<wchar_t const *> {
         static std::string convert(wchar_t const *str);
     };
-
     template<>
     struct StringMaker<wchar_t *> {
         static std::string convert(wchar_t *str);
     };
-
 #endif
 
+    // TBD: Should we use `strnlen` to ensure that we don't go out of the buffer,
+    //      while keeping string semantics?
     template<int SZ>
     struct StringMaker<char[SZ]> {
-        static std::string convert(const char *str) {
+        static std::string convert(char const *str) {
             return ::Catch::Detail::stringify(std::string{str});
         }
     };
-
     template<int SZ>
     struct StringMaker<signed char[SZ]> {
-        static std::string convert(const char *str) {
-            return ::Catch::Detail::stringify(std::string{str});
+        static std::string convert(signed char const *str) {
+            return ::Catch::Detail::stringify(std::string{reinterpret_cast<char const *>(str)});
         }
     };
-
     template<int SZ>
     struct StringMaker<unsigned char[SZ]> {
-        static std::string convert(const char *str) {
-            return ::Catch::Detail::stringify(std::string{str});
+        static std::string convert(unsigned char const *str) {
+            return ::Catch::Detail::stringify(std::string{reinterpret_cast<char const *>(str)});
         }
     };
 
@@ -930,27 +929,22 @@ namespace Catch {
     struct StringMaker<int> {
         static std::string convert(int value);
     };
-
     template<>
     struct StringMaker<long> {
         static std::string convert(long value);
     };
-
     template<>
     struct StringMaker<long long> {
         static std::string convert(long long value);
     };
-
     template<>
     struct StringMaker<unsigned int> {
         static std::string convert(unsigned int value);
     };
-
     template<>
     struct StringMaker<unsigned long> {
         static std::string convert(unsigned long value);
     };
-
     template<>
     struct StringMaker<unsigned long long> {
         static std::string convert(unsigned long long value);
@@ -965,12 +959,10 @@ namespace Catch {
     struct StringMaker<char> {
         static std::string convert(char c);
     };
-
     template<>
     struct StringMaker<signed char> {
         static std::string convert(signed char c);
     };
-
     template<>
     struct StringMaker<unsigned char> {
         static std::string convert(unsigned char c);
@@ -985,7 +977,6 @@ namespace Catch {
     struct StringMaker<float> {
         static std::string convert(float value);
     };
-
     template<>
     struct StringMaker<double> {
         static std::string convert(double value);
@@ -1013,6 +1004,15 @@ namespace Catch {
             }
         }
     };
+
+#if defined(_MANAGED)
+    template <typename T>
+    struct StringMaker<T^> {
+        static std::string convert( T^ ref ) {
+            return ::Catch::Detail::clrReferenceToString(ref);
+        }
+    };
+#endif
 
     namespace Detail {
         template<typename InputIterator>
@@ -1143,6 +1143,13 @@ namespace Catch {
                 !std::is_same<decltype(begin(std::declval<T>())), not_this_one>::value &&
                 !std::is_same<decltype(end(std::declval<T>())), not_this_one>::value;
     };
+
+#if defined(_MANAGED) // Managed types are never ranges
+    template <typename T>
+    struct is_range<T^> {
+        static const bool value = false;
+    };
+#endif
 
     template<typename Range>
     std::string rangeToString(Range const &range) {
@@ -1319,7 +1326,6 @@ namespace Catch {
 
     struct ITransientExpression {
         auto isBinaryExpression() const -> bool { return m_isBinaryExpression; }
-
         auto getResult() const -> bool { return m_result; }
 
         virtual void streamReconstructedExpression(std::ostream &os) const = 0;
@@ -1375,31 +1381,23 @@ namespace Catch {
     // Specialised comparison functions to handle equality comparisons between ints and pointers (NULL deduces as an int)
     template<typename LhsT, typename RhsT>
     auto compareEqual(LhsT const &lhs, RhsT const &rhs) -> bool { return static_cast<bool>(lhs == rhs); }
-
     template<typename T>
     auto compareEqual(T *const &lhs, int rhs) -> bool { return lhs == reinterpret_cast<void const *>( rhs ); }
-
     template<typename T>
     auto compareEqual(T *const &lhs, long rhs) -> bool { return lhs == reinterpret_cast<void const *>( rhs ); }
-
     template<typename T>
     auto compareEqual(int lhs, T *const &rhs) -> bool { return reinterpret_cast<void const *>( lhs ) == rhs; }
-
     template<typename T>
     auto compareEqual(long lhs, T *const &rhs) -> bool { return reinterpret_cast<void const *>( lhs ) == rhs; }
 
     template<typename LhsT, typename RhsT>
     auto compareNotEqual(LhsT const &lhs, RhsT &&rhs) -> bool { return static_cast<bool>(lhs != rhs); }
-
     template<typename T>
     auto compareNotEqual(T *const &lhs, int rhs) -> bool { return lhs != reinterpret_cast<void const *>( rhs ); }
-
     template<typename T>
     auto compareNotEqual(T *const &lhs, long rhs) -> bool { return lhs != reinterpret_cast<void const *>( rhs ); }
-
     template<typename T>
     auto compareNotEqual(int lhs, T *const &rhs) -> bool { return reinterpret_cast<void const *>( lhs ) != rhs; }
-
     template<typename T>
     auto compareNotEqual(long lhs, T *const &rhs) -> bool { return reinterpret_cast<void const *>( lhs ) != rhs; }
 
@@ -1431,17 +1429,14 @@ namespace Catch {
         auto operator>(RhsT const &rhs) -> BinaryExpr<LhsT, RhsT const &> const {
             return {static_cast<bool>(m_lhs > rhs), m_lhs, ">", rhs};
         }
-
         template<typename RhsT>
         auto operator<(RhsT const &rhs) -> BinaryExpr<LhsT, RhsT const &> const {
             return {static_cast<bool>(m_lhs < rhs), m_lhs, "<", rhs};
         }
-
         template<typename RhsT>
         auto operator>=(RhsT const &rhs) -> BinaryExpr<LhsT, RhsT const &> const {
             return {static_cast<bool>(m_lhs >= rhs), m_lhs, ">=", rhs};
         }
-
         template<typename RhsT>
         auto operator<=(RhsT const &rhs) -> BinaryExpr<LhsT, RhsT const &> const {
             return {static_cast<bool>(m_lhs <= rhs), m_lhs, "<=", rhs};
@@ -1484,7 +1479,6 @@ namespace Catch {
 namespace Catch {
 
     class AssertionResult;
-
     struct AssertionInfo;
     struct SectionInfo;
     struct SectionEndInfo;
@@ -1521,39 +1515,32 @@ namespace Catch {
                 (AssertionInfo const &info,
                  ITransientExpression const &expr,
                  AssertionReaction &reaction) = 0;
-
         virtual void handleMessage
                 (AssertionInfo const &info,
                  ResultWas::OfType resultType,
                  StringRef const &message,
                  AssertionReaction &reaction) = 0;
-
         virtual void handleUnexpectedExceptionNotThrown
                 (AssertionInfo const &info,
                  AssertionReaction &reaction) = 0;
-
         virtual void handleUnexpectedInflightException
                 (AssertionInfo const &info,
                  std::string const &message,
                  AssertionReaction &reaction) = 0;
-
         virtual void handleIncomplete
                 (AssertionInfo const &info) = 0;
-
         virtual void handleNonExpr
                 (AssertionInfo const &info,
                  ResultWas::OfType resultType,
                  AssertionReaction &reaction) = 0;
 
         virtual bool lastAssertionPassed() = 0;
-
         virtual void assertionPassed() = 0;
 
         // Deprecated, do not use:
         virtual std::string getCurrentTestName() const = 0;
 
         virtual const AssertionResult *getLastResult() const = 0;
-
         virtual void exceptionEarlyReported() = 0;
     };
 
@@ -1567,14 +1554,11 @@ namespace Catch {
     };
     struct AssertionResultData;
     struct IResultCapture;
-
     class RunContext;
 
     class LazyExpression {
         friend class AssertionHandler;
-
         friend struct AssertionStats;
-
         friend class RunContext;
 
         ITransientExpression const *m_transientExpression = nullptr;
@@ -1608,7 +1592,6 @@ namespace Catch {
                  SourceLineInfo const &lineInfo,
                  StringRef capturedExpression,
                  ResultDisposition::Flags resultDisposition);
-
         ~AssertionHandler() {
             if (!m_completed) {
                 m_resultCapture.handleIncomplete(m_assertionInfo);
@@ -1625,17 +1608,12 @@ namespace Catch {
         void handleMessage(ResultWas::OfType resultType, StringRef const &message);
 
         void handleExceptionThrownAsExpected();
-
         void handleUnexpectedExceptionNotThrown();
-
         void handleExceptionNotThrownAsExpected();
-
         void handleThrowingCallSkipped();
-
         void handleUnexpectedInflightException();
 
         void complete();
-
         void setCompleted();
 
         // query
@@ -1667,7 +1645,6 @@ namespace Catch {
         bool operator==(MessageInfo const &other) const;
 
         bool operator<(MessageInfo const &other) const;
-
     private:
         static unsigned int globalCount;
     };
@@ -1700,7 +1677,6 @@ namespace Catch {
     class ScopedMessage {
     public:
         explicit ScopedMessage(MessageBuilder const &builder);
-
         ~ScopedMessage();
 
         MessageInfo m_info;
@@ -1857,9 +1833,7 @@ namespace Catch {
         Counts &operator+=(Counts const &other);
 
         std::size_t total() const;
-
         bool allPassed() const;
-
         bool allOk() const;
 
         std::size_t passed = 0;
@@ -1915,20 +1889,15 @@ namespace Catch {
 namespace Catch {
 
     auto getCurrentNanosecondsSinceEpoch() -> uint64_t;
-
     auto getEstimatedClockResolution() -> uint64_t;
 
     class Timer {
         uint64_t m_nanoseconds = 0;
     public:
         void start();
-
         auto getElapsedNanoseconds() const -> uint64_t;
-
         auto getElapsedMicroseconds() const -> uint64_t;
-
         auto getElapsedMilliseconds() const -> unsigned int;
-
         auto getElapsedSeconds() const -> double;
     };
 
@@ -1942,7 +1911,6 @@ namespace Catch {
     class Section : NonCopyable {
     public:
         Section(SectionInfo const &info);
-
         ~Section();
 
         // This indicates whether the section should be executed or not
@@ -1979,7 +1947,6 @@ namespace Catch {
         Timer m_timer;
 
         static auto getResolution() -> uint64_t;
-
     public:
         // Keep most of this inline as it's on the code path that is being timed
         BenchmarkLooper(StringRef name)
@@ -2000,7 +1967,6 @@ namespace Catch {
         }
 
         void reportStart();
-
         auto needsMoreIterations() -> bool;
     };
 
@@ -2020,14 +1986,12 @@ namespace Catch {
 namespace Catch {
 
     class TestCase;
-
     struct ITestCaseRegistry;
     struct IExceptionTranslatorRegistry;
     struct IExceptionTranslator;
     struct IReporterRegistry;
     struct IReporterFactory;
     struct ITagAliasRegistry;
-
     class StartupExceptionRegistry;
 
     using IReporterFactoryPtr = std::shared_ptr<IReporterFactory>;
@@ -2059,16 +2023,13 @@ namespace Catch {
 
         virtual void
         registerTagAlias(std::string const &alias, std::string const &tag, SourceLineInfo const &lineInfo) = 0;
-
         virtual void registerStartupException() noexcept = 0;
     };
 
     IRegistryHub &getRegistryHub();
 
     IMutableRegistryHub &getMutableRegistryHub();
-
     void cleanUp();
-
     std::string translateActiveException();
 
 }
@@ -2330,14 +2291,11 @@ namespace Catch {
                 MatcherUntypedBase(MatcherUntypedBase const &) = default;
 
                 MatcherUntypedBase &operator=(MatcherUntypedBase const &) = delete;
-
                 std::string toString() const;
 
             protected:
                 virtual ~MatcherUntypedBase();
-
                 virtual std::string describe() const = 0;
-
                 mutable std::string m_cachedToString;
             };
 
@@ -2345,7 +2303,6 @@ namespace Catch {
             struct MatcherMethod {
                 virtual bool match(ObjectT const &arg) const = 0;
             };
-
             template<typename PtrT>
             struct MatcherMethod<PtrT *> {
                 virtual bool match(PtrT *arg) const = 0;
@@ -2370,7 +2327,6 @@ namespace Catch {
                     }
                     return true;
                 }
-
                 std::string describe() const override {
                     std::string description;
                     description.reserve(4 + m_matchers.size() * 32);
@@ -2394,7 +2350,6 @@ namespace Catch {
 
                 std::vector<MatcherBase<ArgT> const *> m_matchers;
             };
-
             template<typename ArgT>
             struct MatchAnyOf : MatcherBase<ArgT> {
 
@@ -2405,7 +2360,6 @@ namespace Catch {
                     }
                     return false;
                 }
-
                 std::string describe() const override {
                     std::string description;
                     description.reserve(4 + m_matchers.size() * 32);
@@ -2450,12 +2404,10 @@ namespace Catch {
             MatchAllOf<T> MatcherBase<T>::operator&&(MatcherBase const &other) const {
                 return MatchAllOf<T>() && *this && other;
             }
-
             template<typename T>
             MatchAnyOf<T> MatcherBase<T>::operator||(MatcherBase const &other) const {
                 return MatchAnyOf<T>() || *this || other;
             }
-
             template<typename T>
             MatchNotOf<T> MatcherBase<T>::operator!() const {
                 return MatchNotOf<T>(*this);
@@ -2487,9 +2439,7 @@ namespace Catch {
                 WithinAbsMatcher(double target, double margin);
 
                 bool match(double const &matchee) const override;
-
                 std::string describe() const override;
-
             private:
                 double m_target;
                 double m_margin;
@@ -2499,9 +2449,7 @@ namespace Catch {
                 WithinUlpsMatcher(double target, int ulps, FloatingPointKind baseType);
 
                 bool match(double const &matchee) const override;
-
                 std::string describe() const override;
-
             private:
                 double m_target;
                 int m_ulps;
@@ -2513,15 +2461,61 @@ namespace Catch {
         // The following functions create the actual matcher objects.
         // This allows the types to be inferred
         Floating::WithinUlpsMatcher WithinULP(double target, int maxUlpDiff);
-
         Floating::WithinUlpsMatcher WithinULP(float target, int maxUlpDiff);
-
         Floating::WithinAbsMatcher WithinAbs(double target, double margin);
 
     } // namespace Matchers
 } // namespace Catch
 
 // end catch_matchers_floating.h
+// start catch_matchers_generic.hpp
+
+#include <functional>
+#include <string>
+
+namespace Catch {
+    namespace Matchers {
+        namespace Generic {
+
+            namespace Detail {
+                std::string finalizeDescription(const std::string &desc);
+            }
+
+            template<typename T>
+            class PredicateMatcher : public MatcherBase<T> {
+                std::function<bool(T const &)> m_predicate;
+                std::string m_description;
+            public:
+
+                PredicateMatcher(std::function<bool(T const &)> const &elem, std::string const &descr)
+                        : m_predicate(std::move(elem)),
+                          m_description(Detail::finalizeDescription(descr)) {}
+
+                bool match(T const &item) const override {
+                    return m_predicate(item);
+                }
+
+                std::string describe() const override {
+                    return m_description;
+                }
+            };
+
+        } // namespace Generic
+
+        // The following functions create the actual matcher objects.
+        // The user has to explicitly specify type to the function, because
+        // infering std::function<bool(T const&)> is hard (but possible) and
+        // requires a lot of TMP.
+        template<typename T>
+        Generic::PredicateMatcher<T>
+        Predicate(std::function<bool(T const &)> const &predicate, std::string const &description = "") {
+            return Generic::PredicateMatcher<T>(predicate, description);
+        }
+
+    } // namespace Matchers
+} // namespace Catch
+
+// end catch_matchers_generic.hpp
 // start catch_matchers_string.h
 
 #include <string>
@@ -2535,7 +2529,6 @@ namespace Catch {
                 CasedString(std::string const &str, CaseSensitive::Choice caseSensitivity);
 
                 std::string adjustString(std::string const &str) const;
-
                 std::string caseSensitivitySuffix() const;
 
                 CaseSensitive::Choice m_caseSensitivity;
@@ -2544,7 +2537,6 @@ namespace Catch {
 
             struct StringMatcherBase : MatcherBase<std::string> {
                 StringMatcherBase(std::string const &operation, CasedString const &comparator);
-
                 std::string describe() const override;
 
                 CasedString m_comparator;
@@ -2556,19 +2548,16 @@ namespace Catch {
 
                 bool match(std::string const &source) const override;
             };
-
             struct ContainsMatcher : StringMatcherBase {
                 ContainsMatcher(CasedString const &comparator);
 
                 bool match(std::string const &source) const override;
             };
-
             struct StartsWithMatcher : StringMatcherBase {
                 StartsWithMatcher(CasedString const &comparator);
 
                 bool match(std::string const &source) const override;
             };
-
             struct EndsWithMatcher : StringMatcherBase {
                 EndsWithMatcher(CasedString const &comparator);
 
@@ -2579,7 +2568,6 @@ namespace Catch {
                 RegexMatcher(std::string regex, CaseSensitive::Choice caseSensitivity);
 
                 bool match(std::string const &matchee) const override;
-
                 std::string describe() const override;
 
             private:
@@ -2686,7 +2674,6 @@ namespace Catch {
                     }
                     return true;
                 }
-
                 std::string describe() const override {
                     return "Contains: " + ::Catch::Detail::stringify(m_comparator);
                 }
@@ -2711,7 +2698,6 @@ namespace Catch {
                             return false;
                     return true;
                 }
-
                 std::string describe() const override {
                     return "Equals: " + ::Catch::Detail::stringify(m_comparator);
                 }
@@ -2757,7 +2743,6 @@ namespace Catch {
                 std::string describe() const override {
                     return "UnorderedEquals: " + ::Catch::Detail::stringify(m_target);
                 }
-
             private:
                 std::vector<T> const &m_target;
             };
@@ -2896,11 +2881,8 @@ namespace Catch {
         friend void setTags(TestCaseInfo &testCaseInfo, std::vector<std::string> tags);
 
         bool isHidden() const;
-
         bool throws() const;
-
         bool okToFail() const;
-
         bool expectedToFail() const;
 
         std::string tagsAsString() const;
@@ -2950,7 +2932,6 @@ namespace Catch {
 
     struct IRunner {
         virtual ~IRunner();
-
         virtual bool aborting() const = 0;
     };
 }
@@ -4833,33 +4814,33 @@ namespace Catch {
 
 #ifdef CATCH_PLATFORM_MAC
 
-#define CATCH_TRAP() __asm__("int $3\n" : : ) /* NOLINT */
+    #define CATCH_TRAP() __asm__("int $3\n" : : ) /* NOLINT */
 
 #elif defined(CATCH_PLATFORM_LINUX)
     // If we can use inline assembler, do it because this allows us to break
     // directly at the location of the failing check instead of breaking inside
     // raise() called from it, i.e. one stack frame below.
-#if defined(__GNUC__) && (defined(__i386) || defined(__x86_64))
-#define CATCH_TRAP() asm volatile ("int $3") /* NOLINT */
-#else // Fall back to the generic way.
-#include <signal.h>
+    #if defined(__GNUC__) && (defined(__i386) || defined(__x86_64))
+        #define CATCH_TRAP() asm volatile ("int $3") /* NOLINT */
+    #else // Fall back to the generic way.
+        #include <signal.h>
 
-#define CATCH_TRAP() raise(SIGTRAP)
-#endif
+        #define CATCH_TRAP() raise(SIGTRAP)
+    #endif
 #elif defined(_MSC_VER)
-#define CATCH_TRAP() __debugbreak()
+    #define CATCH_TRAP() __debugbreak()
 #elif defined(__MINGW32__)
     extern "C" __declspec(dllimport) void __stdcall DebugBreak();
-#define CATCH_TRAP() DebugBreak()
+    #define CATCH_TRAP() DebugBreak()
 #endif
 
 #ifdef CATCH_TRAP
-#define CATCH_BREAK_INTO_DEBUGGER() if( Catch::isDebuggerActive() ) { CATCH_TRAP(); }
+    #define CATCH_BREAK_INTO_DEBUGGER() if( Catch::isDebuggerActive() ) { CATCH_TRAP(); }
 #else
     namespace Catch {
         inline void doNothing() {}
     }
-#define CATCH_BREAK_INTO_DEBUGGER() Catch::doNothing()
+    #define CATCH_BREAK_INTO_DEBUGGER() Catch::doNothing()
 #endif
 
 // end catch_debugger.h
@@ -5026,7 +5007,7 @@ namespace Catch {
 
     public:
         // !TBD We need to do this another way!
-        bool aborting() const override;
+        bool aborting() const final;
 
     private:
 
@@ -6126,7 +6107,7 @@ namespace detail {
         template<typename T>
         auto operator|( T const &other ) const -> Parser;
 
-        template<typename T>
+		template<typename T>
         auto operator+( T const &other ) const -> Parser;
     };
 
@@ -7248,8 +7229,8 @@ namespace Catch {
     } // namespace Catch
 
 #elif defined(CATCH_PLATFORM_LINUX)
-#include <fstream>
-#include <string>
+    #include <fstream>
+    #include <string>
 
     namespace Catch{
         // The standard POSIX way of detecting a debugger is to attempt to
@@ -7778,16 +7759,16 @@ namespace Catch {
 
 namespace Catch {
 
-    LeakDetector::LeakDetector() {
-        int flag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
-        flag |= _CRTDBG_LEAK_CHECK_DF;
-        flag |= _CRTDBG_ALLOC_MEM_DF;
-        _CrtSetDbgFlag(flag);
-        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
-        _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-        // Change this to leaking allocation's number to break there
-        _CrtSetBreakAlloc(-1);
-    }
+	LeakDetector::LeakDetector() {
+		int flag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+		flag |= _CRTDBG_LEAK_CHECK_DF;
+		flag |= _CRTDBG_ALLOC_MEM_DF;
+		_CrtSetDbgFlag(flag);
+		_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+		_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+		// Change this to leaking allocation's number to break there
+		_CrtSetBreakAlloc(-1);
+	}
 }
 
 #else
@@ -8076,7 +8057,7 @@ namespace Floating {
     // Performs equivalent check of std::fabs(lhs - rhs) <= margin
     // But without the subtraction to allow for INFINITY in comparison
     bool WithinAbsMatcher::match(double const& matchee) const {
-        return (matchee + m_margin >= m_target) && (m_target + m_margin >= m_margin);
+        return (matchee + m_margin >= m_target) && (m_target + m_margin >= matchee);
     }
 
     std::string WithinAbsMatcher::describe() const {
@@ -8123,6 +8104,16 @@ Floating::WithinAbsMatcher WithinAbs(double target, double margin) {
 } // namespace Catch
 
 // end catch_matchers_floating.cpp
+// start catch_matchers_generic.cpp
+
+std::string Catch::Matchers::Generic::Detail::finalizeDescription(const std::string& desc) {
+    if (desc.empty()) {
+        return "matches undescribed predicate";
+    } else {
+        return "matches predicate: \"" + desc + '"';
+    }
+}
+// end catch_matchers_generic.cpp
 // start catch_matchers_string.cpp
 
 #include <regex>
@@ -9127,9 +9118,9 @@ namespace Catch {
         void useConfigData( ConfigData const& configData );
 
         int run( int argc, char* argv[] );
-#if defined(CATCH_CONFIG_WCHAR) && defined(WIN32) && defined(UNICODE)
+    #if defined(CATCH_CONFIG_WCHAR) && defined(WIN32) && defined(UNICODE)
         int run( int argc, wchar_t* const argv[] );
-#endif
+    #endif
         int run();
 
         clara::Parser const& cli() const;
@@ -10621,6 +10612,8 @@ namespace Catch {
 
 #include <chrono>
 
+static const uint64_t nanosecondsInSecond = 1000000000;
+
 namespace Catch {
 
     auto getCurrentNanosecondsSinceEpoch() -> uint64_t {
@@ -10631,17 +10624,25 @@ namespace Catch {
         uint64_t sum = 0;
         static const uint64_t iterations = 1000000;
 
+        auto startTime = getCurrentNanosecondsSinceEpoch();
+
         for( std::size_t i = 0; i < iterations; ++i ) {
 
             uint64_t ticks;
             uint64_t baseTicks = getCurrentNanosecondsSinceEpoch();
             do {
                 ticks = getCurrentNanosecondsSinceEpoch();
-            }
-            while( ticks == baseTicks );
+            } while( ticks == baseTicks );
 
             auto delta = ticks - baseTicks;
             sum += delta;
+
+            // If we have been calibrating for over 3 seconds -- the clock
+            // is terrible and we should move on.
+            // TBD: How to signal that the measured resolution is probably wrong?
+            if (ticks > startTime + 3 * nanosecondsInSecond) {
+                return sum / i;
+            }
         }
 
         // We're just taking the mean, here. To do better we could take the std. dev and exclude outliers
@@ -11003,7 +11004,7 @@ namespace Catch {
     }
 
     Version const& libraryVersion() {
-        static Version version( 2, 2, 1, "", 0 );
+        static Version version( 2, 2, 2, "", 0 );
         return version;
     }
 
@@ -11054,7 +11055,45 @@ namespace Catch {
 
 #include <iomanip>
 
+using uchar = unsigned char;
+
 namespace Catch {
+
+namespace {
+
+    size_t trailingBytes(unsigned char c) {
+        if ((c & 0xE0) == 0xC0) {
+            return 2;
+        }
+        if ((c & 0xF0) == 0xE0) {
+            return 3;
+        }
+        if ((c & 0xF8) == 0xF0) {
+            return 4;
+        }
+        CATCH_INTERNAL_ERROR("Invalid multibyte utf-8 start byte encountered");
+    }
+
+    uint32_t headerValue(unsigned char c) {
+        if ((c & 0xE0) == 0xC0) {
+            return c & 0x1F;
+        }
+        if ((c & 0xF0) == 0xE0) {
+            return c & 0x0F;
+        }
+        if ((c & 0xF8) == 0xF0) {
+            return c & 0x07;
+        }
+        CATCH_INTERNAL_ERROR("Invalid multibyte utf-8 start byte encountered");
+    }
+
+    void hexEscapeChar(std::ostream& os, unsigned char c) {
+        os << "\\x"
+            << std::uppercase << std::hex << std::setfill('0') << std::setw(2)
+            << static_cast<int>(c);
+    }
+
+} // anonymous namespace
 
     XmlEncode::XmlEncode( std::string const& str, ForWhat forWhat )
     :   m_str( str ),
@@ -11062,41 +11101,95 @@ namespace Catch {
     {}
 
     void XmlEncode::encodeTo( std::ostream& os ) const {
-
         // Apostrophe escaping not necessary if we always use " to write attributes
         // (see: http://www.w3.org/TR/xml/#syntax)
 
-        for( std::size_t i = 0; i < m_str.size(); ++ i ) {
-            char c = m_str[i];
-            switch( c ) {
-                case '<':   os << "&lt;"; break;
-                case '&':   os << "&amp;"; break;
+        for( std::size_t idx = 0; idx < m_str.size(); ++ idx ) {
+            uchar c = m_str[idx];
+            switch (c) {
+            case '<':   os << "&lt;"; break;
+            case '&':   os << "&amp;"; break;
 
-                case '>':
-                    // See: http://www.w3.org/TR/xml/#syntax
-                    if( i > 2 && m_str[i-1] == ']' && m_str[i-2] == ']' )
-                        os << "&gt;";
-                    else
-                        os << c;
+            case '>':
+                // See: http://www.w3.org/TR/xml/#syntax
+                if (idx > 2 && m_str[idx - 1] == ']' && m_str[idx - 2] == ']')
+                    os << "&gt;";
+                else
+                    os << c;
+                break;
+
+            case '\"':
+                if (m_forWhat == ForAttributes)
+                    os << "&quot;";
+                else
+                    os << c;
+                break;
+
+            default:
+                // Check for control characters and invalid utf-8
+
+                // Escape control characters in standard ascii
+                // see http://stackoverflow.com/questions/404107/why-are-control-characters-illegal-in-xml-1-0
+                if (c < 0x09 || (c > 0x0D && c < 0x20) || c == 0x7F) {
+                    hexEscapeChar(os, c);
                     break;
+                }
 
-                case '\"':
-                    if( m_forWhat == ForAttributes )
-                        os << "&quot;";
-                    else
-                        os << c;
+                // Plain ASCII: Write it to stream
+                if (c < 0x7F) {
+                    os << c;
                     break;
+                }
 
-                default:
-                    // Escape control chars - based on contribution by @espenalb in PR #465 and
-                    // by @mrpi PR #588
-                    if ( ( c >= 0 && c < '\x09' ) || ( c > '\x0D' && c < '\x20') || c=='\x7F' ) {
-                        // see http://stackoverflow.com/questions/404107/why-are-control-characters-illegal-in-xml-1-0
-                        os << "\\x" << std::uppercase << std::hex << std::setfill('0') << std::setw(2)
-                           << static_cast<int>( c );
-                    }
-                    else
-                        os << c;
+                // UTF-8 territory
+                // Check if the encoding is valid and if it is not, hex escape bytes.
+                // Important: We do not check the exact decoded values for validity, only the encoding format
+                // First check that this bytes is a valid lead byte:
+                // This means that it is not encoded as 1111 1XXX
+                // Or as 10XX XXXX
+                if (c <  0xC0 ||
+                    c >= 0xF8) {
+                    hexEscapeChar(os, c);
+                    break;
+                }
+
+                auto encBytes = trailingBytes(c);
+                // Are there enough bytes left to avoid accessing out-of-bounds memory?
+                if (idx + encBytes - 1 >= m_str.size()) {
+                    hexEscapeChar(os, c);
+                    break;
+                }
+                // The header is valid, check data
+                // The next encBytes bytes must together be a valid utf-8
+                // This means: bitpattern 10XX XXXX and the extracted value is sane (ish)
+                bool valid = true;
+                uint32_t value = headerValue(c);
+                for (std::size_t n = 1; n < encBytes; ++n) {
+                    uchar nc = m_str[idx + n];
+                    valid &= ((nc & 0xC0) == 0x80);
+                    value = (value << 6) | (nc & 0x3F);
+                }
+
+                if (
+                    // Wrong bit pattern of following bytes
+                    (!valid) ||
+                    // Overlong encodings
+                    (value < 0x80) ||
+                    (0x80 <= value && value < 0x800   && encBytes > 2) ||
+                    (0x800 < value && value < 0x10000 && encBytes > 3) ||
+                    // Encoded value out of range
+                    (value >= 0x110000)
+                    ) {
+                    hexEscapeChar(os, c);
+                    break;
+                }
+
+                // If we got here, this is in fact a valid(ish) utf-8 sequence
+                for (std::size_t n = 0; n < encBytes; ++n) {
+                    os << m_str[idx + n];
+                }
+                idx += encBytes - 1;
+                break;
             }
         }
     }
@@ -13045,4 +13138,3 @@ using Catch::Detail::Approx;
 // end catch_reenable_warnings.h
 // end catch.hpp
 #endif // TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
-
