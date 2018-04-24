@@ -4,7 +4,7 @@
 
 #include <array>
 #include "sensor.h"
-#include "mpuManager.h"
+#include "catch.hpp"
 
 #include <thread>
 
@@ -130,6 +130,7 @@ void sensor::processData() {
         ayRecordings.emplace_back(y);
         azRecordings.emplace_back(z);
     }
+
     stats = {
         {"xDistance", xDistance},
         {"yDistance", yDistance},
@@ -143,4 +144,75 @@ void sensor::processData() {
         {"yMin", yMin},
         {"zMin", zMin}
     };
+}
+
+
+double sensor::getVarience(vector<double> input, int size, bool absolute, bool max) {
+    if (input.size() < size)
+        return 0;
+
+    double target = max ? numeric_limits<double>::min() : numeric_limits<double>::max();
+
+    for (int i = 0; i < input.size() - size; i += size) {
+        vector<double> subset = vector(input.begin() + i, input.begin() + size);
+        auto range = getRange(subset, absolute);
+
+        if (max && range > target)
+            target = max;
+        else if (!max && range < target)
+            target = max;
+    }
+
+    return target;
+}
+
+
+double sensor::getRange(vector<double> input, bool absolute) {
+    if (input.size() < 1)
+        return 0.0;
+
+    double difference = 0;
+    double last = input[0];
+
+    for (const double &value : input) {
+        difference += absolute ? abs(last - value) : value - last;
+        last = value;
+    }
+
+    return difference;
+}
+
+TEST_CASE("Checking sensor", "[sensor]") {
+
+    // Check that all the tests run successfully
+    SECTION(" check that the sensor is reading and the json data is full ") {
+        sensor snsr;
+
+        snsr.init();
+        snsr.storeNewReading();
+
+        auto res = snsr.getData();
+
+        REQUIRE(!res["x"].empty());
+        REQUIRE(!res["y"].empty());
+        REQUIRE(!res["z"].empty());
+
+        REQUIRE(!res["stats"].empty());
+    }
+
+    // Check that all the tests run successfully
+    SECTION(" check that the sensor data is clearing correctly ") {
+        sensor snsr;
+
+        snsr.init();
+        snsr.storeNewReading();
+
+        snsr.resetStores();
+
+        REQUIRE(res["x"].empty());
+        REQUIRE(res["y"].empty());
+        REQUIRE(res["z"].empty());
+
+        REQUIRE(res["stats"].empty());
+    }
 }

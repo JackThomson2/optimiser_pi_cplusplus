@@ -57,6 +57,10 @@ private:
     float ypr[3];
 
     void processData();
+
+    double getVarience(vector<double>, int, bool, bool);
+
+    double getRange(vector<double>, bool);
 };
 
 
