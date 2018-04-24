@@ -10,9 +10,7 @@
 
 using namespace std;
 
-server::server() {
-    //INIT CODE
-}
+server::server() = default;
 
 void server::startSever() {
     printf("Setting up i2c\n");

@@ -4,10 +4,9 @@
 
 #include "multiplexer.h"
 #include <bcm2835.h>
-#include <stdio.h>
-#include "I2Cdev.h"
+#include "catch.hpp"
 
-multiplexer::multiplexer() {}
+multiplexer::multiplexer() = default;
 
 void multiplexer::setPath(int path) {
     uint8_t config = 0x00;
@@ -22,4 +21,22 @@ int multiplexer::getPath() {
     char result;
     bcm2835_i2c_read(&result, 1);
     return (int)result;
+}
+
+
+TEST_CASE("Checking multiplexer", "[multiplexer]") {
+
+    // Check that all the tests run successfully
+    SECTION(" check that multiplexer sets address correctly ") {
+        multiplexer multi;
+
+        for (int i = 0; i != 5; i++) {
+            multi.setPath(i);
+
+            uint8_t expected = 0x00;
+            expected |= (0x01 << i);
+
+            REQUIRE(expected == multi.getPath());
+        }
+    }
 }
