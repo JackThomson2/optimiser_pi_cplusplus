@@ -38,7 +38,7 @@ string storageManager::getFileNamesJson() {
     loadAllFiles();
     json info = json::array();
 
-    for (auto file : fileNames) {
+    for (const auto &file : fileNames) {
         info.emplace_back(getSentName(file) + "000");
     }
 
