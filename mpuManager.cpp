@@ -5,6 +5,7 @@
 #include "mpuManager.h"
 #include <thread>
 #include <iostream>
+#include <atomic>
 #include <fstream>
 #include "catch.hpp"
 
@@ -28,7 +29,7 @@ void mpuManager::startRecording(atomic<bool>& stop) {
 
 // This is a quick loop for resetting all sensors
 void mpuManager::resetAllSensors() {
-    for (int i = 0; i != 5; i++) {
+    for (int i = 0; i != 4; i++) {
         multi.setPath(i);
         Sensor[i].resetSensor();
         Sensor[i].resetStores();
@@ -40,12 +41,12 @@ void mpuManager::resetAllSensors() {
 void mpuManager::zeroGyros() {
     auto start_s = chrono::steady_clock::now();
     while (true) {
-        for (int i = 0; i != 5; i++) {
+        for (int i = 0; i != 4; i++) {
             multi.setPath(i);
             Sensor[i].storeNewReading();
         }
         auto diff = chrono::steady_clock::now() - start_s;
-        if ((chrono::duration<double , milli> (diff).count()) > 10000)
+        if ((chrono::duration<double , milli> (diff).count()) > 20000)
             return;
     }
 }
@@ -56,7 +57,7 @@ bool mpuManager::runMultiTest() {
 
     multi.setPath(8);
     this_thread::sleep_for(chrono::milliseconds(10));
-    for (int i = 0; i != 5; i++) {
+    for (int i = 0; i != 4; i++) {
         multi.setPath(i);
         this_thread::sleep_for(chrono::milliseconds(10));
         uint8_t expected = 0x00;
@@ -71,7 +72,7 @@ bool mpuManager::runMultiTest() {
 // Loop for making sure all the sensors are setup
 void mpuManager::runInitialisation() {
     printf("Initialising sensors\n\n");
-    for (int i = 0; i != 5; i++) {
+    for (int i = 0; i != 4; i++) {
         multi.setPath(i);
         this_thread::sleep_for(chrono::milliseconds(200));
         Sensor[i].init();
@@ -81,7 +82,7 @@ void mpuManager::runInitialisation() {
 
 // This loop runs through all the sensors and runs the function getting them to take a new recording
 void mpuManager::getDeviceReadings() {
-    for (int i = 0; i != 5; i++) {
+    for (int i = 0; i != 4; i++) {
         multi.setPath(i);
         Sensor[i].storeNewReading();
     }
@@ -91,7 +92,7 @@ void mpuManager::getDeviceReadings() {
 void mpuManager::storeJSON() {
     json returnJson = json::array();
 
-    for (int i = 0; i != 5; i++) {
+    for (int i = 0; i != 4; i++) {
         json stored = {to_string(i), Sensor[i].getData()};
         returnJson.emplace_back(stored);
     }
@@ -105,6 +106,8 @@ void mpuManager::storeJSON() {
 
     printf("Saved to file to \"%s\".\n", fileName.c_str());
 }
+
+/*
 
 TEST_CASE("Checking manager", "[mpuManager]") {
 
@@ -139,4 +142,4 @@ TEST_CASE("Checking manager", "[mpuManager]") {
         REQUIRE(store.getFileNames().size() > initialSize);
     }
 
-}
+} */

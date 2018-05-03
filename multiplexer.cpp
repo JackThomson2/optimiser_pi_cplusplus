@@ -24,7 +24,7 @@ int multiplexer::getPath() {
     bcm2835_i2c_read(&result, 1);
     return (int)result;
 }
-
+/*
 
 TEST_CASE("Checking multiplexer", "[multiplexer]") {
 
@@ -41,4 +41,4 @@ TEST_CASE("Checking multiplexer", "[multiplexer]") {
             REQUIRE(expected == multi.getPath());
         }
     }
-}
+}*/
